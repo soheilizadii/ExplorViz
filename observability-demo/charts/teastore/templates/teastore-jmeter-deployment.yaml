@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teastore-jmeter
+  labels:
+    app: teastore
+    run: teastore-jmeter
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: teastore
+      run: teastore-jmeter
+  template:
+    metadata:
+      labels:
+        app: teastore
+        run: teastore-jmeter
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: teastore-jmeter
+          image: "{{ .Values.image.jmeter }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.service.port }}
+              

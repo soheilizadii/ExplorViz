@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teastore-recommender
+  labels:
+    app: teastore
+    run: teastore-recommender
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: teastore
+      run: teastore-recommender
+  template:
+    metadata:
+      labels:
+        app: teastore
+        run: teastore-recommender
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: teastore-recommender
+          image: "{{ .Values.image.recommender }}:{{ .Values.image.tag }}"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          env:
+            - name: HOST_NAME
+              value: "teastore-recommender"
+            - name: REGISTRY_HOST
+              value: "teastore-registry"
+            - name: RABBITMQ_HOST
+              value: "teastore-rabbitmq"
+          # readinessProbe:
+          #   httpGet:
+          #     path: "/tools.descartes.teastore.recommender/rest/train/isready"
+          #     port: {{ .Values.service.port }}
+          #     scheme: HTTP
+          #   initialDelaySeconds: 15
+          #   timeoutSeconds: 5
+          #   periodSeconds: 10
+          #   successThreshold: 1
+          #   failureThreshold: 3
+          resources:
+            requests:
+              cpu: {{ .Values.recommender.resources.requests.cpu }}
+              memory: {{ .Values.recommender.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.recommender.resources.limits.cpu }}
+              memory: {{ .Values.recommender.resources.limits.memory }}

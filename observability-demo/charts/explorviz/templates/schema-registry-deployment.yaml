@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: schema-registry
+  labels:
+    app: explorviz
+    run: schema-registry
+spec:
+  replicas: {{ .Values.schemaRegistry.replicaCount }}
+  selector:
+    matchLabels:
+      app: explorviz
+      run: schema-registry
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: schema-registry
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: schema-registry
+          image: "{{ .Values.image.schemaRegistry }}:{{ .Values.image.schemaRegistryTag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.schemaRegistry.port }}
+              name: http
+          env:
+            {{- range $key, $value := .Values.schemaRegistry.env }}
+            - name: {{ $key }}
+              value: "{{ $value }}"
+            {{- end }}
+          volumeMounts:
+            - name: schema-registry-secrets
+              mountPath: /etc/schema-registry/secrets
+          # readinessProbe:
+          #   httpGet:
+          #     path: /subjects
+          #     port: {{ .Values.schemaRegistry.port }}
+          #   initialDelaySeconds: 10
+          #   periodSeconds: 5
+      volumes:
+        - name: schema-registry-secrets
+          emptyDir: {}

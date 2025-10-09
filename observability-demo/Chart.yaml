@@ -1,0 +1,13 @@
+apiVersion: v2
+name: observability-demo
+description: Helm umbrella chart for TeaStore and ExplorViz observability setup
+type: application
+version: 0.1.0
+appVersion: "2025.0"
+dependencies:
+  - name: teastore
+    version: 0.1.0
+    repository: file://charts/teastore
+  - name: explorviz
+    version: 0.1.0
+    repository: file://charts/explorviz

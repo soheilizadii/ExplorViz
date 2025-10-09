@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teastore-persistence
+  labels:
+    app: teastore
+    run: teastore-persistence
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: teastore
+      run: teastore-persistence
+  template:
+    metadata:
+      labels:
+        app: teastore
+        run: teastore-persistence
+    spec:
+      containers:
+        - name: teastore-persistence
+          image: "{{ .Values.image.persistence }}:{{ .Values.image.tag }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          env:
+            - name: HOST_NAME
+              value: "teastore-persistence"
+            - name: REGISTRY_HOST
+              value: "teastore-registry"
+            - name: DB_HOST
+              value: "teastore-db"
+            - name: DB_PORT
+              value: "{{ .Values.db.port }}"
+            - name: RABBITMQ_HOST
+              value: "teastore-rabbitmq"
+          # readinessProbe:
+          #   httpGet:
+          #     path: /tools.descartes.teastore.persistence/rest/ready/isready
+          #     port: 8080
+          #     scheme: HTTP
+          # livenessProbe:
+          #   httpGet:
+          #     path: /tools.descartes.teastore.persistence/rest/ready/isready
+          #     port: 8080
+          #     scheme: HTTP

@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-lag-exporter
+  labels:
+    app: explorviz
+    run: kafka-lag-exporter
+spec:
+  replicas: {{ .Values.kafkaLagExporter.replicaCount }}
+  selector:
+    matchLabels:
+      app: explorviz
+      run: kafka-lag-exporter
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: kafka-lag-exporter
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: kafka-lag-exporter
+          image: "{{ .Values.image.kafkaLagExporter }}:{{ .Values.image.kafkaLagExporterTag }}"
+          imagePullPolicy: IfNotPresent
+          command:
+            - "bin/kafka-lag-exporter"
+            - "-Dconfig.file=/opt/docker/conf/application.conf"
+          ports:
+            - containerPort: {{ .Values.kafkaLagExporter.port }}
+              name: metrics
+          volumeMounts:
+            - name: kafka-lag-exporter-config
+              mountPath: /opt/docker/conf/application.conf
+              subPath: application.conf
+      volumes:
+        - name: kafka-lag-exporter-config
+          configMap:
+            name: kafka-lag-exporter-config

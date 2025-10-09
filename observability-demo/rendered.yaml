@@ -1,0 +1,1683 @@
+---
+# Source: observability-demo/charts/explorviz/templates/cassandra-entrypoint-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cassandra-entrypoint
+  labels:
+    app: explorviz
+    run: cassandra
+data:
+  custom-entrypoint.sh: |
+---
+# Source: observability-demo/charts/explorviz/templates/grafana-dashboards-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  labels:
+    app: explorviz
+    run: grafana
+data:
+  {}
+---
+# Source: observability-demo/charts/explorviz/templates/grafana-provisioning-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-provisioning
+  labels:
+    app: explorviz
+    run: grafana
+data:
+  {}
+---
+# Source: observability-demo/charts/explorviz/templates/kafka-lag-exporter-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-lag-exporter-config
+  labels:
+    app: explorviz
+    run: kafka-lag-exporter
+data:
+  application.conf: |
+---
+# Source: observability-demo/charts/explorviz/templates/otel-collector-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  labels:
+    app: explorviz
+    run: otel-collector
+data:
+  otel-collector-config.yaml: |-
+---
+# Source: observability-demo/charts/explorviz/templates/prometheus-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  labels:
+    app: explorviz
+    run: prometheus
+data:
+  prometheus.yml: |
+---
+# Source: observability-demo/charts/explorviz/templates/grafana-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-data
+  labels:
+    app: explorviz
+    run: grafana
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 2Gi
+---
+# Source: observability-demo/charts/explorviz/templates/prometheus-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-data
+  labels:
+    app: explorviz
+    run: prometheus
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+---
+# Source: observability-demo/charts/explorviz/templates/adapter-service-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: adapter-service
+  labels:
+    app: explorviz
+    run: adapter-service
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8087
+      targetPort: http
+      protocol: TCP
+  selector:
+    app: explorviz
+    run: adapter-service
+---
+# Source: observability-demo/charts/explorviz/templates/cassandra-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cassandra
+  labels:
+    app: explorviz
+    run: cassandra
+spec:
+  clusterIP: None  # headless for StatefulSet
+  selector:
+    app: explorviz
+    run: cassandra
+  ports:
+    - name: cql
+      port: 9042
+      targetPort: 9042
+---
+# Source: observability-demo/charts/explorviz/templates/collaboration-service-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: collaboration-service
+  labels:
+    app: explorviz
+    run: collaboration-service
+spec:
+  type: ClusterIP
+  selector:
+    app: explorviz
+    run: collaboration-service
+  ports:
+    - name: http
+      port: 4444
+      targetPort: http
+      protocol: TCP
+---
+# Source: observability-demo/charts/explorviz/templates/frontend-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  labels:
+    app: explorviz
+    run: frontend
+spec:
+  type: NodePort
+  selector:
+    app: explorviz
+    run: frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8082
+      protocol: TCP
+---
+# Source: observability-demo/charts/explorviz/templates/kafka-lag-exporter-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-lag-exporter
+  labels:
+    app: explorviz
+    run: kafka-lag-exporter
+spec:
+  type: ClusterIP
+  selector:
+    app: explorviz
+    run: kafka-lag-exporter
+  ports:
+    - name: metrics
+      port: 8000
+      targetPort: 8000
+---
+# Source: observability-demo/charts/explorviz/templates/kafka-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  labels:
+    app: explorviz
+    run: kafka
+spec:
+  clusterIP: None  # Needed for StatefulSet to have stable DNS
+  selector:
+    app: explorviz
+    run: kafka
+  ports:
+    - name: internal
+      port: 9092
+      targetPort: 9092
+    - name: external
+      port: 9091
+      targetPort: 9091
+    - name: controller
+      port: 29093
+      targetPort: 29093
+    - name: jmx
+      port: 9101
+      targetPort: 9101
+---
+# Source: observability-demo/charts/explorviz/templates/mongo-user-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-user
+  labels:
+    app: explorviz
+    run: mongo-user
+spec:
+  clusterIP: None  
+  selector:
+    app: explorviz
+    run: mongo-user
+  ports:
+    - name: mongo
+      port: 27017
+      targetPort: 27017
+---
+# Source: observability-demo/charts/explorviz/templates/otel-collector-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  labels:
+    app: explorviz
+    run: otel-collector
+spec:
+  type: ClusterIP
+  selector:
+    app: explorviz
+    run: otel-collector
+  ports:
+    - name: otlp
+      port: 55678
+      targetPort: 55678
+    - name: zpages
+      port: 55679
+      targetPort: 55679
+---
+# Source: observability-demo/charts/explorviz/templates/prometheus-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  labels:
+    app: explorviz
+    run: prometheus
+spec:
+  type: ClusterIP
+  selector:
+    app: explorviz
+    run: prometheus
+  ports:
+    - name: http
+      port: 9090
+      targetPort: 9090
+---
+# Source: observability-demo/charts/explorviz/templates/redis-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-collab
+  labels:
+    app: explorviz
+    run: redis-collab
+spec:
+  selector:
+    app: explorviz
+    run: redis-collab
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+      protocol: TCP
+  type: ClusterIP
+---
+# Source: observability-demo/charts/explorviz/templates/schema-registry-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: schema-registry
+  labels:
+    app: explorviz
+    run: schema-registry
+spec:
+  type: ClusterIP
+  selector:
+    app: explorviz
+    run: schema-registry
+  ports:
+    - name: http
+      port: 8081
+      targetPort: 8081
+---
+# Source: observability-demo/charts/explorviz/templates/span-service-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: span-service
+  labels:
+    app: explorviz
+    run: span-service
+spec:
+  type: ClusterIP
+  selector:
+    app: explorviz
+    run: span-service
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+---
+# Source: observability-demo/charts/explorviz/templates/user-service-deployment.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  labels:
+    app: explorviz
+    run: user-service
+spec:
+  type: ClusterIP
+  selector:
+    app: explorviz
+    run: user-service
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+---
+# Source: observability-demo/charts/teastore/templates/otel-transformer-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-transformer
+  labels:
+    app: teastore
+    run: otel-transformer
+spec:
+  type: ClusterIP
+  ports:
+    - port: 10001
+      protocol: TCP
+  selector:
+    app: teastore
+    run: otel-transformer
+---
+# Source: observability-demo/charts/teastore/templates/teastore-auth-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: teastore-auth
+  labels:
+    app: teastore
+    run: teastore-auth
+spec:
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+  selector:
+    app: teastore
+    run: teastore-auth
+---
+# Source: observability-demo/charts/teastore/templates/teastore-db-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: teastore-db
+  labels:
+    app: teastore
+    run: teastore-db
+spec:
+  type: ClusterIP
+  selector:
+    app: teastore
+    run: teastore-db
+  ports:
+    - name: mysql
+      port: 3306
+      protocol: TCP
+---
+# Source: observability-demo/charts/teastore/templates/teastore-image-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: teastore-image
+  labels:
+    app: teastore
+    run: teastore-image
+spec:
+  ports:
+    - port: 
+      protocol: TCP
+  selector:
+    app: teastore
+    run: teastore-image
+---
+# Source: observability-demo/charts/teastore/templates/teastore-jmeter-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: teastore-jmeter
+  labels:
+    app: teastore
+    run: teastore-jmeter
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      protocol: TCP
+  selector:
+    app: teastore
+    run: teastore-jmeter
+---
+# Source: observability-demo/charts/teastore/templates/teastore-persistence-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: teastore-persistence
+  labels:
+    app: teastore
+    run: teastore-persistence
+spec:
+  ports:
+    - port: 
+      protocol: TCP
+  selector:
+    app: teastore
+    run: teastore-persistence
+---
+# Source: observability-demo/charts/teastore/templates/teastore-recommender-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: teastore-recommender
+  labels:
+    app: teastore
+    run: teastore-recommender
+spec:
+  ports:
+    - port: 8080
+      protocol: TCP
+  selector:
+    app: teastore
+    run: teastore-recommender
+---
+# Source: observability-demo/charts/teastore/templates/teastore-registry-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: teastore-registry
+  labels: 
+     app: teastore
+     run: teastore-registry 
+spec:
+  type: ClusterIP
+  selector:  
+    app: teastore
+    run: teastore-registry 
+  ports:
+      port: 8080
+      protocol: TCP
+---
+# Source: observability-demo/charts/teastore/templates/teastore-webui-nodeport.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: teastore-webui
+  labels:
+    app: teastore
+    run: teastore-webui
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: 
+      targetPort: 
+      protocol: TCP
+      nodePort: 8080
+  selector:
+    app: teastore
+    run: teastore-webui
+---
+# Source: observability-demo/charts/explorviz/templates/adapter-service-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adapter-service
+  labels:
+    app: explorviz
+    run: adapter-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: explorviz
+      run: adapter-service
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: adapter-service
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: adapter-service
+          image: "explorviz/adapter-service-jvm:kieker-2025"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8087
+              name: http
+          env:
+            - name: EXPLORVIZ_LOG_LVL
+              value: "DEBUG"
+            - name: EXPLORVIZ_VALIDATE_TOKEN_EXISTENCE
+              value: "true"
+            - name: QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL
+              value: "http://schema-registry:8081"
+          
+          readinessProbe:
+            httpGet:
+              path: /q/health
+              port: 8087
+            initialDelaySeconds: 15
+            periodSeconds: 5
+---
+# Source: observability-demo/charts/explorviz/templates/collaboration-service-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: collaboration-service
+  labels:
+    app: explorviz
+    run: collaboration-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: explorviz
+      run: collaboration-service
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: collaboration-service
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: collaboration-service
+          image: ":"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 4444
+              name: http
+          env:
+            - name: REDIS_HOST
+              value: "redis-collab"
+            - name: REDIS_PORT
+              value: "6379"
+
+          # ✅ Optional health checks
+          readinessProbe:
+            httpGet:
+              path: /q/health
+              port: 4444
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 4444
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+# Source: observability-demo/charts/explorviz/templates/frontend-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels:
+    app: explorviz
+    run: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: explorviz
+      run: frontend
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: frontend
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: frontend
+          image: "explorviz/frontend:kieker-2025"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8082
+              name: http
+          env:
+            - name: AUTH0_CALLBACK_URL
+              value: "http://localhost:8080/callback"
+            - name: AUTH0_LOGOUT_URL
+              value: "http://localhost:8080/"
+            - name: AUTH0_LOGO_URL
+              value: "http://localhost:8080/images/explorviz-logo.png"
+            - name: CODE_SERV_URL
+              value: "http://localhost:8082"
+            - name: COLLABORATION_URL
+              value: "http://collaboration-service:4444"
+            - name: FRONTEND_HOST_NAME
+              value: "localhost"
+            - name: FRONTEND_HOST_URL
+              value: "http://localhost:8082"
+            - name: LANDSCAPE_URL
+              value: "http://span-service:8080"
+            - name: NO_AUTH_USER_NICKNAME
+              value: "user-1"
+            - name: TIMESTAMPS_URL
+              value: "http://span-service:8080"
+            - name: TRACE_URL
+              value: "http://span-service:8080"
+            - name: USER_URL
+              value: "http://user-service:8080"
+            - name: VSCODE_SERV_URL
+              value: "http://localhost:8082"
+
+          # ✅ Readiness probe
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8082
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+          # ✅ Liveness probe
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8082
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+# Source: observability-demo/charts/explorviz/templates/grafana-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  labels:
+    app: explorviz
+    run: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: explorviz
+      run: grafana
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: grafana
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: grafana
+          image: "grafana/grafana:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "true"
+            - name: GF_AUTH_ANONYMOUS_ORG_NAME
+              value: "Main Org."
+            - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+              value: "Admin"
+            - name: GF_AUTH_DISABLE_LOGIN_FORM
+              value: "true"
+            - name: GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH
+              value: "/var/lib/grafana/dashboards/explorviz-all.json"
+            - name: GF_USERS_ALLOW_SIGN_UP
+              value: "false"
+          volumeMounts:
+            - name: grafana-data
+              mountPath: /var/lib/grafana
+            - name: grafana-provisioning
+              mountPath: /etc/grafana/provisioning
+            - name: grafana-dashboards
+              mountPath: /var/lib/grafana/dashboards
+      volumes:
+        - name: grafana-provisioning
+          configMap:
+            name: grafana-provisioning
+        - name: grafana-dashboards
+          configMap:
+            name: grafana-dashboards
+        - name: grafana-data
+          persistentVolumeClaim:
+            claimName: grafana-data
+---
+# Source: observability-demo/charts/explorviz/templates/kafka-lag-exporter-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-lag-exporter
+  labels:
+    app: explorviz
+    run: kafka-lag-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: explorviz
+      run: kafka-lag-exporter
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: kafka-lag-exporter
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: kafka-lag-exporter
+          image: "seglo/kafka-lag-exporter:0.8.2"
+          imagePullPolicy: IfNotPresent
+          command:
+            - "bin/kafka-lag-exporter"
+            - "-Dconfig.file=/opt/docker/conf/application.conf"
+          ports:
+            - containerPort: 8000
+              name: metrics
+          volumeMounts:
+            - name: kafka-lag-exporter-config
+              mountPath: /opt/docker/conf/application.conf
+              subPath: application.conf
+      volumes:
+        - name: kafka-lag-exporter-config
+          configMap:
+            name: kafka-lag-exporter-config
+---
+# Source: observability-demo/charts/explorviz/templates/otel-collector-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  labels:
+    app: explorviz
+    run: otel-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: explorviz
+      run: otel-collector
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: otel-collector
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: otel-collector
+          image: "kieker/opentelemetry-collector:kieker-2025"
+          imagePullPolicy: IfNotPresent
+          args: ["--config=/etc/otel-collector-config.yaml"]
+          ports:
+            - containerPort: 55678
+              name: otlp
+            - containerPort: 55679
+              name: zpages
+          volumeMounts:
+            - name: otel-config
+              mountPath: /etc/otel-collector-config.yaml
+              subPath: otel-collector-config.yaml
+      volumes:
+        - name: otel-config
+          configMap:
+            name: otel-collector-config
+---
+# Source: observability-demo/charts/explorviz/templates/prometheus-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  labels:
+    app: explorviz
+    run: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: explorviz
+      run: prometheus
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: prometheus
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: prometheus
+          image: "prom/prometheus:latest"
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"
+            - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+            - "--web.console.templates=/usr/share/prometheus/consoles"
+          ports:
+            - containerPort: 9090
+              name: http
+          volumeMounts:
+            - name: prometheus-config
+              mountPath: /etc/prometheus
+            - name: prometheus-data
+              mountPath: /prometheus
+      volumes:
+        - name: prometheus-config
+          configMap:
+            name: prometheus-config
+        - name: prometheus-data
+          persistentVolumeClaim:
+            claimName: prometheus-data
+---
+# Source: observability-demo/charts/explorviz/templates/redis-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-collab
+  labels:
+    app: explorviz
+    run: redis-collab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: explorviz
+      run: redis-collab
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: redis-collab
+    spec:
+      containers:
+        - name: redis
+          image: "redis:7.2.2"
+          ports:
+            - containerPort: 6379
+---
+# Source: observability-demo/charts/explorviz/templates/schema-registry-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: schema-registry
+  labels:
+    app: explorviz
+    run: schema-registry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: explorviz
+      run: schema-registry
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: schema-registry
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: schema-registry
+          image: "confluentinc/cp-schema-registry:7.3.0"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+              name: http
+          env:
+            - name: SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS
+              value: "PLAINTEXT://kafka:9092"
+          volumeMounts:
+            - name: schema-registry-secrets
+              mountPath: /etc/schema-registry/secrets
+          readinessProbe:
+            httpGet:
+              path: /subjects
+              port: 8081
+            initialDelaySeconds: 10
+            periodSeconds: 5
+      volumes:
+        - name: schema-registry-secrets
+          emptyDir: {}
+---
+# Source: observability-demo/charts/explorviz/templates/span-service-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: span-service
+  labels:
+    app: explorviz
+    run: span-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: explorviz
+      run: span-service
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: span-service
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: span-service
+          image: "explorviz/span-service-jvm:kieker-2025"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: EXPLORVIZ_LOG_LVL
+              value: "DEBUG"
+            - name: EXPLORVIZ_SPAN_API_TIME_RANGES_ENABLED
+              value: "true"
+            - name: QUARKUS_CASSANDRA_AUTH_PASSWORD
+              value: "cassandra"
+            - name: QUARKUS_CASSANDRA_AUTH_USERNAME
+              value: "cassandra"
+            - name: QUARKUS_CASSANDRA_CONTACT_POINTS
+              value: "cassandra:9042"
+            - name: QUARKUS_CASSANDRA_REQUEST_TIMEOUT
+              value: "10"
+            - name: QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL
+              value: "http://schema-registry:8081"
+
+          # ✅ Readiness probe (replaces depends_on)
+          readinessProbe:
+            httpGet:
+              path: /q/health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 5
+
+          # ✅ Liveness probe (auto-restart if unhealthy)
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+---
+# Source: observability-demo/charts/explorviz/templates/user-service-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  labels:
+    app: explorviz
+    run: user-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: explorviz
+      run: user-service
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: user-service
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: user-service
+          image: "explorviz/user-service-jvm:kieker-2025"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: EXPLORVIZ_LOG_LVL
+              value: "DEBUG"
+            - name: INIT_TOKEN_ENABLED
+              value: "true"
+            - name: INIT_TOKEN_SECRET
+              value: "mytokensecret"
+            - name: INIT_TOKEN_VALUE
+              value: "mytokenvalue"
+            - name: MP_MESSAGING_OUTGOING_TOKEN_EVENTS_SCHEMA_REGISTRY_URL
+              value: "http://schema-registry:8081"
+            - name: QUARKUS_MONGODB_CONNECTION_STRING
+              value: "mongodb://mongo-user:27017"
+            - name: QUARKUS_OIDC_ENABLED
+              value: "false"
+          readinessProbe:
+            httpGet:
+              path: /q/health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+---
+# Source: observability-demo/charts/teastore/templates/otel-transformer-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-transformer
+  labels:
+    app: teastore
+    run: otel-transformer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teastore
+      run: otel-transformer
+  template:
+    metadata:
+      labels:
+        app: teastore
+        run: otel-transformer
+    spec:
+      containers:
+        - name: otel-transformer
+          image: "kieker/otel-transformer:kieker-2.0.2"
+          ports:
+            - containerPort: 10001
+---
+# Source: observability-demo/charts/teastore/templates/teastore-auth-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teastore-auth
+  labels:
+    app: teastore
+    run: teastore-auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teastore
+      run: teastore-auth
+  template:
+    metadata:
+      labels:
+        app: teastore
+        run: teastore-auth
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: teastore-auth
+          image: "kieker/teastore-auth:kieker-2.0.2"
+          ports:
+            - containerPort: 8080
+          env:
+            - name: HOST_NAME
+              value: "teastore-auth"
+            - name: REGISTRY_HOST
+              value: "teastore-registry"
+            - name: RABBITMQ_HOST
+              value: "teastore-rabbitmq"
+          readinessProbe:
+            httpGet:
+              path: "/tools.descartes.teastore.auth/rest/ready/isready"
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+# Source: observability-demo/charts/teastore/templates/teastore-db-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teastore-db
+  labels:
+    app: teastore
+    run: teastore-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teastore
+      run: teastore-db
+  template:
+    metadata:
+      labels:
+        app: teastore
+        run: teastore-db
+    spec:
+      containers:
+        - name: teastore-db
+          image: "kieker/teastore-db:kieker-2.0.2"
+          ports:
+            - name: mysql
+              containerPort: 3306
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 1000Mi
+            limits:
+              cpu: 2000m
+              memory: 2000Mi
+---
+# Source: observability-demo/charts/teastore/templates/teastore-image-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teastore-image
+  labels:
+    app: teastore
+    run: teastore-image
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teastore
+      run: teastore-image
+  template:
+    metadata:
+      labels:
+        app: teastore
+        run: teastore-image
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: teastore-image
+          image: "kieker/teastore-image:kieker-2.0.2"
+          ports:
+            - containerPort: 8080
+          env:
+            - name: HOST_NAME
+              value: "teastore-image"
+            - name: REGISTRY_HOST
+              value: "teastore-registry"
+            - name: RABBITMQ_HOST
+              value: "teastore-rabbitmq"
+          readinessProbe:
+            httpGet:
+              path: "/tools.descartes.teastore.image/rest/image/finished"
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+# Source: observability-demo/charts/teastore/templates/teastore-jmeter-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teastore-jmeter
+  labels:
+    app: teastore
+    run: teastore-jmeter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teastore
+      run: teastore-jmeter
+  template:
+    metadata:
+      labels:
+        app: teastore
+        run: teastore-jmeter
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: teastore-jmeter
+          image: "kieker/teastore-jmeter:kieker-2.0.2"
+          ports:
+            - containerPort: 8080
+---
+# Source: observability-demo/charts/teastore/templates/teastore-persistence-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teastore-persistence
+  labels:
+    app: teastore
+    run: teastore-persistence
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teastore
+      run: teastore-persistence
+  template:
+    metadata:
+      labels:
+        app: teastore
+        run: teastore-persistence
+    spec:
+      containers:
+        - name: teastore-persistence
+          image: "kieker/teastore-persistence:kieker-2.0.2"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: HOST_NAME
+              value: "teastore-persistence"
+            - name: REGISTRY_HOST
+              value: "teastore-registry"
+            - name: DB_HOST
+              value: "teastore-db"
+            - name: DB_PORT
+              value: "3306"
+            - name: RABBITMQ_HOST
+              value: "teastore-rabbitmq"
+          readinessProbe:
+            httpGet:
+              path: /tools.descartes.teastore.persistence/rest/ready/isready
+              port: 8080
+              scheme: HTTP
+          livenessProbe:
+            httpGet:
+              path: /tools.descartes.teastore.persistence/rest/ready/isready
+              port: 8080
+              scheme: HTTP
+---
+# Source: observability-demo/charts/teastore/templates/teastore-recommender-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teastore-recommender
+  labels:
+    app: teastore
+    run: teastore-recommender
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teastore
+      run: teastore-recommender
+  template:
+    metadata:
+      labels:
+        app: teastore
+        run: teastore-recommender
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: teastore-recommender
+          image: "kieker/teastore-recommender:kieker-2.0.2"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: HOST_NAME
+              value: "teastore-recommender"
+            - name: REGISTRY_HOST
+              value: "teastore-registry"
+            - name: RABBITMQ_HOST
+              value: "teastore-rabbitmq"
+          readinessProbe:
+            httpGet:
+              path: "/tools.descartes.teastore.recommender/rest/train/isready"
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+---
+# Source: observability-demo/charts/teastore/templates/teastore-registry-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teastore-registry
+  labels: 
+     app: teastore
+     run: teastore-registry
+spec:
+  replicas: 1
+  selector:
+    matchLabels: 
+      app: teastore
+      run: teastore-registry 
+  template:
+    metadata:
+      labels: 
+         app: teastore
+         run: teastore-registry 
+    spec:
+      containers:
+        - name: teastore-registry
+          image: "kieker/teastore-registry:kieker-2.0.2"
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 5     # wait 5s before first check
+            periodSeconds: 5           # check every 5s
+            failureThreshold: 6        # fail after 6 * 5s = 30s
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 30    # wait 30s before first check
+            periodSeconds: 10          # check every 10s
+            failureThreshold: 3
+---
+# Source: observability-demo/charts/teastore/templates/teastore-webui-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teastore-webui
+  labels:
+    app: teastore
+    run: teastore-webui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teastore
+      run: teastore-webui
+  template:
+    metadata:
+      labels:
+        app: teastore
+        run: teastore-webui
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: teastore-webui
+          image: "kieker/teastore-webui:kieker-2.0.2"
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: HOST_NAME
+              value: "teastore-webui"
+            - name: REGISTRY_HOST
+              value: "teastore-registry"
+            - name: RABBITMQ_HOST
+              value: "teastore-rabbitmq"
+          readinessProbe:
+            httpGet:
+              path: "/tools.descartes.teastore.webui/status"
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 300m
+              memory: 512Mi
+            limits:
+              cpu: 700m
+              memory: 1024Mi
+---
+# Source: observability-demo/charts/explorviz/templates/cassandra-statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cassandra
+  labels:
+    app: explorviz
+    run: cassandra
+spec:
+  serviceName: cassandra
+  replicas: 1
+  selector:
+    matchLabels:
+      app: explorviz
+      run: cassandra
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: cassandra
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: cassandra
+          image: "cassandra:3.11.14"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9042
+              name: cql
+          env:
+            - name: HEAP_NEWSIZE
+              value: "200M"
+            - name: MAX_HEAP_SIZE
+              value: "1G"
+          volumeMounts:
+            - name: cassandra-data
+              mountPath: /var/lib/cassandra
+            - name: cassandra-entrypoint
+              mountPath: /usr/local/bin/custom-entrypoint.sh
+              subPath: custom-entrypoint.sh
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - cqlsh -u cassandra -p cassandra -e "describe keyspaces"
+            initialDelaySeconds: 40
+            periodSeconds: 15
+      volumes:
+        - name: cassandra-entrypoint
+          configMap:
+            name: cassandra-entrypoint
+  volumeClaimTemplates:
+    - metadata:
+        name: cassandra-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
+---
+# Source: observability-demo/charts/explorviz/templates/kafka-statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kafka
+  labels:
+    app: explorviz
+    run: kafka
+spec:
+  serviceName: kafka
+  replicas: 1
+  selector:
+    matchLabels:
+      app: explorviz
+      run: kafka
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: kafka
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: kafka
+          image: "confluentinc/cp-kafka:7.3.0"
+          ports:
+            - name: internal
+              containerPort: 9092
+            - name: external
+              containerPort: 9091
+            - name: controller
+              containerPort: 29093
+            - name: jmx
+              containerPort: 9101
+          env:
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: "PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9091"
+            - name: KAFKA_BROKER_ID
+              value: "1"
+            - name: KAFKA_CONTROLLER_LISTENER_NAMES
+              value: "CONTROLLER"
+            - name: KAFKA_CONTROLLER_QUORUM_VOTERS
+              value: "1@kafka:29093"
+            - name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS
+              value: "0"
+            - name: KAFKA_INTER_BROKER_LISTENER_NAME
+              value: "PLAINTEXT"
+            - name: KAFKA_JMX_HOSTNAME
+              value: "localhost"
+            - name: KAFKA_JMX_PORT
+              value: "9101"
+            - name: KAFKA_LISTENERS
+              value: "PLAINTEXT://kafka:9092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9091"
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+            - name: KAFKA_MESSAGE_MAX_BYTES
+              value: "10485880"
+            - name: KAFKA_NODE_ID
+              value: "1"
+            - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+              value: "1"
+            - name: KAFKA_PROCESS_ROLES
+              value: "broker,controller"
+            - name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR
+              value: "1"
+            - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+              value: "1"
+          volumeMounts:
+            - name: kafka-data
+              mountPath: /var/lib/kafka/data
+            - name: kafka-secrets
+              mountPath: /etc/kafka/secrets
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - kafka-topics --bootstrap-server kafka:9092 --list || exit 1
+            initialDelaySeconds: 30
+            periodSeconds: 15
+      volumes:
+        - name: kafka-secrets
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: kafka-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
+---
+# Source: observability-demo/charts/explorviz/templates/mongo-user-statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongo-user
+  labels:
+    app: explorviz
+    run: mongo-user
+spec:
+  serviceName: mongo-user
+  replicas: 1
+  selector:
+    matchLabels:
+      app: explorviz
+      run: mongo-user
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: mongo-user
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: mongo-user
+          image: "mongo:6.0"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 27017
+              name: mongo
+          volumeMounts:
+            - name: mongo-user-data
+              mountPath: /data/db
+            - name: mongo-user-config
+              mountPath: /data/configdb
+  volumeClaimTemplates:
+    - metadata:
+        name: mongo-user-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 2Gi
+    - metadata:
+        name: mongo-user-config
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 500Mi
+---
+# Source: observability-demo/charts/explorviz/templates/init-cassandra-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: init-cassandra
+  labels:
+    app: explorviz
+    run: init-cassandra
+spec:
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: init-cassandra
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: init-cassandra
+          image: kieker/init-cassandra:kieker-2025
+---
+# Source: observability-demo/charts/explorviz/templates/init-kafka-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: init-kafka
+  labels:
+    app: explorviz
+    run: init-kafka
+spec:
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: init-kafka
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: init-kafka
+          image: confluentinc/cp-kafka:7.3.0
+          env:
+            - name: KAFKA_INT_PORT
+              value: "9092"
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              until kafka-topics --bootstrap-server kafka:9092 --list >/dev/null 2>&1; do
+                echo "Kafka not ready yet, retrying..."
+                sleep 5
+              done
+
+              kafka-topics --create --if-not-exists --topic otlp_spans \
+                --bootstrap-server kafka:9092 --replication-factor 1 --partitions 20
+              kafka-topics --create --if-not-exists --topic explorviz-spans \
+                --bootstrap-server kafka:9092 --replication-factor 1 --partitions 20
+              kafka-topics --create --if-not-exists --topic token-events \
+                --bootstrap-server kafka:9092 --replication-factor 1 --partitions 20
+              kafka-topics --create --if-not-exists --topic token-events-table \
+                --bootstrap-server kafka:9092 --replication-factor 1 --partitions 20
+              kafka-topics --bootstrap-server kafka:9092 --list

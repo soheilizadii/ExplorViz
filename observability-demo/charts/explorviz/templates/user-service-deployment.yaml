@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  labels:
+    app: explorviz
+    run: user-service
+spec:
+  replicas: {{ .Values.user.replicaCount }}
+  selector:
+    matchLabels:
+      app: explorviz
+      run: user-service
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: user-service
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: user-service
+          image: "{{ .Values.image.user }}:{{ .Values.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.user.port }}
+              name: http
+          env:
+            {{- range $key, $value := .Values.user.env }}
+            - name: {{ $key }}
+              value: "{{ $value }}"
+            {{- end }}
+          # readinessProbe:
+          #   httpGet:
+          #     path: /q/health
+          #     port: {{ .Values.user.port }}
+          #   initialDelaySeconds: 20
+          #   periodSeconds: 5
+          # livenessProbe:
+          #   httpGet:
+          #     path: /q/health/live
+          #     port: {{ .Values.user.port }}
+          #   initialDelaySeconds: 30
+          #   periodSeconds: 10

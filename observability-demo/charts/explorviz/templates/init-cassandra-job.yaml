@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: init-cassandra
+  labels:
+    app: explorviz
+    run: init-cassandra
+spec:
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: init-cassandra
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: init-cassandra
+          image: kieker/init-cassandra:kieker-2025
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "⏳ Waiting for Cassandra to become available..."
+              until nc -z cassandra 9042; do
+                echo "Cassandra not ready yet... sleeping 5s"
+                sleep 5
+              done
+              echo "✅ Cassandra is up — initializing keyspaces"
+              /opt/cassandra/bin/cqlsh cassandra -f /opt/cassandra/init.cql
+              echo "🎉 Initialization complete!"

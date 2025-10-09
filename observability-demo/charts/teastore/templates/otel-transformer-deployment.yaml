@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-transformer
+  labels:
+    app: teastore
+    run: otel-transformer
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: teastore
+      run: otel-transformer
+  template:
+    metadata:
+      labels:
+        app: teastore
+        run: otel-transformer
+    spec:
+      containers:
+        - name: otel-transformer
+          image: "{{ .Values.image.otelTransformer  }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: 10001

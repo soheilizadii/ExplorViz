@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: init-kafka
+  labels:
+    app: explorviz
+    run: init-kafka
+spec:
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: init-kafka
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: init-kafka
+          image: {{ .Values.image.kafka }}:{{ .Values.image.kafkaTag }}
+          env:
+            - name: KAFKA_INT_PORT
+              value: "9092"
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              until kafka-topics --bootstrap-server kafka:9092 --list >/dev/null 2>&1; do
+                echo "Kafka not ready yet, retrying..."
+                sleep 5
+              done
+
+              kafka-topics --create --if-not-exists --topic otlp_spans \
+                --bootstrap-server kafka:9092 --replication-factor 1 --partitions 20
+              kafka-topics --create --if-not-exists --topic explorviz-spans \
+                --bootstrap-server kafka:9092 --replication-factor 1 --partitions 20
+              kafka-topics --create --if-not-exists --topic token-events \
+                --bootstrap-server kafka:9092 --replication-factor 1 --partitions 20
+              kafka-topics --create --if-not-exists --topic token-events-table \
+                --bootstrap-server kafka:9092 --replication-factor 1 --partitions 20
+              kafka-topics --bootstrap-server kafka:9092 --list
+

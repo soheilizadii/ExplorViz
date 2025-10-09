@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-collab
+  labels:
+    app: explorviz
+    run: redis-collab
+spec:
+  replicas: {{ .Values.redis.replicaCount }}
+  selector:
+    matchLabels:
+      app: explorviz
+      run: redis-collab
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: redis-collab
+    spec:
+      containers:
+        - name: redis
+          image: "{{ .Values.image.redis }}:{{ .Values.image.redisTag }}"
+          ports:
+            - containerPort: {{ .Values.redis.port }}

@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teastore-webui
+  labels:
+    app: teastore
+    run: teastore-webui
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: teastore
+      run: teastore-webui
+  template:
+    metadata:
+      labels:
+        app: teastore
+        run: teastore-webui
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: teastore-webui
+          image: "{{ .Values.image.webui }}:{{ .Values.image.tag }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+          env:
+            - name: HOST_NAME
+              value: "teastore-webui"
+            - name: REGISTRY_HOST
+              value: "teastore-registry"
+            - name: RABBITMQ_HOST
+              value: "teastore-rabbitmq"
+          # readinessProbe:
+          #   httpGet:
+          #     path: "/tools.descartes.teastore.webui/status"
+          #     port: {{ .Values.service.port }}
+          #     scheme: HTTP
+          #   initialDelaySeconds: 15
+          #   timeoutSeconds: 5
+          #   periodSeconds: 10
+          #   successThreshold: 1
+          #   failureThreshold: 3
+          resources:
+            requests:
+              cpu: {{ .Values.webui.resources.requests.cpu }}
+              memory: {{ .Values.webui.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.webui.resources.limits.cpu }}
+              memory: {{ .Values.webui.resources.limits.memory }}
