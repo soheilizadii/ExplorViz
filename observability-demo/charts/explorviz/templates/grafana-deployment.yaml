@@ -20,7 +20,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
         - name: grafana
-          image: "{{ .Values.image.grafana }}:{{ .Values.image.grafanaTag }}"
+          image: "{{ .Values.image.grafana }}:{{ .Values.image.tag }}"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: {{ .Values.grafana.port }}

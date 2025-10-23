@@ -1,28 +1,27 @@
 # ---------- Images ----------
 image:
-  adapter: explorviz/adapter-service-jvm
-  span: explorviz/span-service-jvm
-  user: explorviz/user-service-jvm
-  collaboration: explorviz/collaboration-service
-  frontend: explorviz/frontend
-  redis: redis
-  redisTag: 7.2.2
-  kafka: confluentinc/cp-kafka
-  schemaRegistry: confluentinc/cp-schema-registry
-  otelCollector: "kieker/opentelemetry-collector"
+  adapter: "explorviz/adapter-service-jvm"
+  span: "explorviz/span-service-jvm"
+  user: "explorviz/user-service-jvm"
+  collaboration: "explorviz/collaboration-service"
+  frontend: "explorviz/frontend"
+  redis: "redis"
+  redisTag: "7.2.2"
+  kafka: "confluentinc/cp-kafka"
+  schemaRegistry: "confluentinc/cp-schema-registry"
+  otelCollector: "otel/opentelemetry-collector-contrib"
   cassandra: "cassandra"
   mongo: "mongo"
   prometheus: "prom/prometheus"
   kafkaLagExporter: "seglo/kafka-lag-exporter"
   grafana: "grafana/grafana"
-  grafanaTag: "latest"
+  traceGenerator: "explorviz/trace-generator"
   kafkaLagExporterTag: "0.8.2"
-  prometheusTag: "latest"
   mongoTag: "6.0"
-  kafkaTag: 7.3.0
-  schemaRegistryTag: 7.3.0
+  kafkaTag: "7.3.0"
+  schemaRegistryTag: "7.3.0"
   cassandraTag: "3.11.14"
-  tag: kieker-2025
+  tag: "latest"
 
 # ---------- Global Service Defaults ----------
 service:
@@ -42,13 +41,15 @@ span:
   port: 8080
   replicaCount: 1   
   env:
-    QUARKUS_CASSANDRA_CONTACT_POINTS: "cassandra:9042"
+    QUARKUS_CASSANDRA_CONTACT_POINTS: "cassandra.default.svc.cluster.local:9042"
     QUARKUS_CASSANDRA_AUTH_USERNAME: "cassandra"
     QUARKUS_CASSANDRA_AUTH_PASSWORD: "cassandra"
     QUARKUS_CASSANDRA_REQUEST_TIMEOUT: "10"
     QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
     EXPLORVIZ_LOG_LVL: "DEBUG"
     EXPLORVIZ_SPAN_API_TIME_RANGES_ENABLED: "true"
+
+
 
 # ---------- User Service ----------
 user:
@@ -79,21 +80,21 @@ redis:
 
 # ---------- Frontend Service ----------
 frontend:
-  port: 8082
+  port: 80
   replicaCount: 1
   env:
-    FRONTEND_HOST_URL: "http://localhost:80"
+    FRONTEND_HOST_URL: "http://frontend:80"
     FRONTEND_HOST_NAME: "localhost"
-    CODE_SERV_URL: "http://localhost:80"
+    CODE_SERV_URL: "http://frontend:80"
     LANDSCAPE_URL: "http://span-service:8080"
     TRACE_URL: "http://span-service:8080"
     TIMESTAMPS_URL: "http://span-service:8080"
     USER_URL: "http://user-service:8080"
     COLLABORATION_URL: "http://collaboration-service:4444"
-    VSCODE_SERV_URL: "http://localhost:80"
-    AUTH0_LOGO_URL: "http://localhost:8080/images/explorviz-logo.png"
-    AUTH0_CALLBACK_URL: "http://localhost:8080/callback"
-    AUTH0_LOGOUT_URL: "http://localhost:8080/"
+    VSCODE_SERV_URL: "http://frontend:80"
+    AUTH0_LOGO_URL: "http://frontend:80/images/explorviz-logo.png"
+    AUTH0_CALLBACK_URL: "http://frontend:80/callback"
+    AUTH0_LOGOUT_URL: "http://frontend:80/"
     NO_AUTH_USER_NICKNAME: "user-1"
 
 # ---------- Kafka  Service ----------
@@ -102,13 +103,12 @@ kafka:
   ports:
     internal: 9092
     external: 9091
-    controller: 29093
     jmx: 9101
   storage:
     size: 5Gi
   env:
     KAFKA_BROKER_ID: "1"
-    KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT"
+    KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
     KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
     KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
@@ -118,9 +118,9 @@ kafka:
     KAFKA_PROCESS_ROLES: "broker,controller"
     KAFKA_MESSAGE_MAX_BYTES: "10485880"
     KAFKA_NODE_ID: "1"
-    KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
+    KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9091"
     KAFKA_CONTROLLER_QUORUM_VOTERS: "1@localhost:29093"
-    KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093"
+    KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:9091"
     KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
     KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
 
@@ -131,8 +131,10 @@ schemaRegistry:
   replicaCount: 1
   env:
     SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "PLAINTEXT://kafka:9092"
-    SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
+    # SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
     SCHEMA_REGISTRY_HOST_NAME: 127.0.0.1
+
+
 # ----------  Otel Collector  ----------
 otelCollector:
   replicaCount: 1
@@ -170,6 +172,14 @@ prometheus:
 kafkaLagExporter:
   replicaCount: 1
   port: 8000
+
+   # ----------  Trace Generator   ----------   
+
+traceGenerator:
+   replicaCount: 1 
+   port: 8079
+
+
 
  # ----------  Grafana  ---------- 
 

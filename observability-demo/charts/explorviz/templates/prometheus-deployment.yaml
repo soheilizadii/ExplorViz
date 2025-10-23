@@ -20,7 +20,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: prometheus
-          image: "{{ .Values.image.prometheus }}:{{ .Values.image.prometheusTag }}"
+          image: "{{ .Values.image.prometheus }}:{{ .Values.image.tag }}"
           imagePullPolicy: IfNotPresent
           args:
             - "--config.file=/etc/prometheus/prometheus.yml"

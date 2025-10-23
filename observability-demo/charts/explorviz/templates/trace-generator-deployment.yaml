@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trace-generator
+  labels:
+    app: explorviz
+    run: trace-generator
+spec:
+  replicas: {{ .Values.traceGenerator.replicaCount }}
+  selector:
+    matchLabels:
+      app: explorviz
+      run: trace-generator
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: trace-generator
+    spec:
+      initContainers:
+        - name: wait-for-schema-registry
+          image: curlimages/curl:8.4.0
+          command:
+            - sh
+            - -c
+            - |
+              echo "⏳ Waiting for Schema Registry at http://schema-registry:8081 ..."
+              until curl -sf http://schema-registry:8081/subjects | grep -q '\['; do
+                echo "Schema Registry not ready yet (empty or unreachable)... sleeping 5s"
+                sleep 5
+              done
+              echo "✅ Schema Registry is ready and has subjects!"
+      containers:
+        - name: trace-generator
+          image: "{{ .Values.image.traceGenerator }}"
+          ports:
+            - containerPort: {{ .Values.traceGenerator.port }}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+            - name: SCHEMA_REGISTRY_URL
+              value: "http://schema-registry:8081"
+

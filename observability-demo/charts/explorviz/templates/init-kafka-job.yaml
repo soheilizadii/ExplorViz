@@ -13,6 +13,20 @@ spec:
         run: init-kafka
     spec:
       restartPolicy: OnFailure
+      initContainers:
+       - name: wait-for-kafka
+         image: busybox
+         command:
+          - sh
+          - -c
+          - |
+              echo "⏳ Waiting for Kafka broker at kafka:9092...";
+              until nc -z kafka 9092; do
+                echo "Kafka not ready yet... sleeping 5s";
+                sleep 5;
+              done;
+              echo "✅ Kafka broker is ready!";
+              sleep 10;
       containers:
         - name: init-kafka
           image: {{ .Values.image.kafka }}:{{ .Values.image.kafkaTag }}

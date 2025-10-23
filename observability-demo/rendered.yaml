@@ -1,5 +1,5 @@
 ---
-# Source: observability-demo/charts/explorviz/templates/cassandra-entrypoint-configmap.yaml
+# Source: explorviz/templates/cassandra-entrypoint-configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -9,8 +9,25 @@ metadata:
     run: cassandra
 data:
   custom-entrypoint.sh: |
+    #!/bin/sh
+    
+    CASSANDRA_CONFIG=/etc/cassandra/cassandra.yaml
+    
+    replace_option() {
+        option="$1"
+        value="$2"
+    
+        sed -Eine "s/^$option:(.*)\$/$option: $value/" "$CASSANDRA_CONFIG"
+    }
+    
+    # Increase timeouts to allow dealing with insert bursts
+    replace_option read_request_timeout_in_ms 10000
+    replace_option write_request_timeout_in_ms 8000
+    replace_option cas_contention_timeout_in_ms 8000
+    
+    exec /usr/local/bin/docker-entrypoint.sh cassandra -f
 ---
-# Source: observability-demo/charts/explorviz/templates/grafana-dashboards-configmap.yaml
+# Source: explorviz/templates/grafana-dashboards-configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -19,9 +36,4261 @@ metadata:
     app: explorviz
     run: grafana
 data:
-  {}
+  adapter-service.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "target": {
+              "limit": 100,
+              "matchAny": false,
+              "tags": [],
+              "type": "dashboard"
+            },
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": 2,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 6,
+          "title": "General",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 6,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 0,
+            "y": 1
+          },
+          "id": 2,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.2.4",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "sum by(job) (up{job=~\"adapter-service\"})",
+              "format": "time_series",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "{{instance}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Service Instance Count",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 10
+          },
+          "id": 4,
+          "panels": [],
+          "title": "Kafka",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 11
+          },
+          "id": 8,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "expr": "sum by (member_host, topic) (kafka_consumergroup_group_lag{group=~\"adapter.*\"})",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Consumer Lag (per instance & topic)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 11
+          },
+          "id": 10,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "expr": "sum by (topic) (kafka_consumergroup_group_topic_sum_lag{group=~\"adapter.*\"})",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Consumer Lag (topic)",
+          "type": "timeseries"
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 37,
+      "style": "dark",
+      "tags": [],
+      "templating": {
+        "list": []
+      },
+      "time": {
+        "from": "now-15m",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Adapter-Service",
+      "uid": "pZVmtmOVk",
+      "version": 1,
+      "weekStart": ""
+    }
+  collaboration-service.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "target": {
+              "limit": 100,
+              "matchAny": false,
+              "tags": [],
+              "type": "dashboard"
+            },
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": 10,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 0,
+            "y": 0
+          },
+          "id": 2,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "expr": "sum(kafka_stream_state_num_entries_active_mem_table{job=\"landscape-service\"})",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Panel Title",
+          "type": "timeseries"
+        }
+      ],
+      "schemaVersion": 37,
+      "style": "dark",
+      "tags": [],
+      "templating": {
+        "list": []
+      },
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Collaboration-Service",
+      "uid": "McCMpmO4z",
+      "version": 1,
+      "weekStart": ""
+    }
+  explorviz-all.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "datasource",
+              "uid": "grafana"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "target": {
+              "limit": 100,
+              "matchAny": false,
+              "tags": [],
+              "type": "dashboard"
+            },
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": 4,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 28,
+          "panels": [],
+          "title": "General",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 4,
+            "x": 0,
+            "y": 1
+          },
+          "id": 6,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            },
+            "text": {},
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.2.6",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "exemplar": true,
+              "expr": "sum by(job) (up{job=~\".*-service\"})",
+              "format": "time_series",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "{{job}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Service Availability",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "description": "Percentage of CPU usage per service",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Usage in %",
+                "axisPlacement": "auto",
+                "axisSoftMax": 0.31,
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "smooth",
+                "lineStyle": {
+                  "fill": "solid"
+                },
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "area"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "#EAB839",
+                    "value": 0.1
+                  },
+                  {
+                    "color": "red",
+                    "value": 0.3
+                  }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*trace-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*landscape-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "orange",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*adapter-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 10,
+            "x": 4,
+            "y": 1
+          },
+          "id": 8,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "exemplar": true,
+              "expr": "sum by(job) (process_cpu_usage)",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "{{job}}",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "exemplar": true,
+              "expr": "sum(process_cpu_usage)",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "Total",
+              "refId": "B"
+            }
+          ],
+          "title": "CPU Usage",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "description": "Memory usage per service",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "axisSoftMax": 8000000000,
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "area"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "#EAB839",
+                    "value": 4000000000
+                  },
+                  {
+                    "color": "red",
+                    "value": 6000000000
+                  }
+                ]
+              },
+              "unit": "decbytes"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*trace-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "#5794F2",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*landscape-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "yellow",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*adapter-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "collaboration-service"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "orange",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 10,
+            "x": 14,
+            "y": 1
+          },
+          "id": 10,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "exemplar": true,
+              "expr": "sum by(job) (jvm_memory_used_bytes)",
+              "interval": "",
+              "legendFormat": "{{job}}",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "exemplar": true,
+              "expr": "sum (jvm_memory_used_bytes)",
+              "hide": false,
+              "instant": false,
+              "interval": "",
+              "legendFormat": "Total",
+              "refId": "B"
+            }
+          ],
+          "title": "Memory Usage",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 9
+          },
+          "id": 30,
+          "panels": [],
+          "title": "Kafka",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "description": "Average number of records consumed per second (per service and topic)",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [
+                {
+                  "options": {
+                    "trace-service": {
+                      "color": "#1F60C4",
+                      "index": 0
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*trace-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "custom.lineStyle",
+                    "value": {
+                      "fill": "solid"
+                    }
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*landscape-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "orange",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*adapter-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byFrameRefID",
+                  "options": "Per Instance"
+                },
+                "properties": [
+                  {
+                    "id": "custom.lineStyle",
+                    "value": {
+                      "dash": [0, 10],
+                      "fill": "dot"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 10
+          },
+          "id": 4,
+          "interval": "5",
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum by(job, topic) (kafka_consumer_fetch_manager_records_consumed_rate{topic!~\".*KSTREAM.*\", topic!~\".*KTABLE.*\", topic!=\"token-events\", topic=~\".+\"})",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "{{job}} ({{topic}})",
+              "range": true,
+              "refId": "Jointly"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "exemplar": true,
+              "expr": "kafka_consumer_fetch_manager_records_consumed_rate{topic!~\".*KSTREAM.*\", topic!~\".*KTABLE.*\", topic!=\"token-events\", topic=~\".+\"}",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "{{job}}:{{instance}} ({{topic}})",
+              "refId": "Per Instance"
+            }
+          ],
+          "title": "Record Consumption Rate",
+          "transformations": [],
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "description": "Average bytes consumed per second (per service and topic)",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [
+                {
+                  "options": {
+                    "trace-service": {
+                      "color": "#1F60C4",
+                      "index": 0
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*trace-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "custom.lineStyle",
+                    "value": {
+                      "fill": "solid"
+                    }
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*landscape-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "orange",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*adapter-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byFrameRefID",
+                  "options": "Per Instance"
+                },
+                "properties": [
+                  {
+                    "id": "custom.lineStyle",
+                    "value": {
+                      "dash": [0, 10],
+                      "fill": "dot"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 10
+          },
+          "id": 22,
+          "interval": "5",
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "exemplar": true,
+              "expr": "sum by(job, topic) (kafka_consumer_fetch_manager_bytes_consumed_rate{topic!~\".*KSTREAM.*\", topic!~\".*KTABLE.*\", topic!=\"token-events\", topic=~\".+\"})",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "{{job}} ({{topic}})",
+              "refId": "Jointly"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "exemplar": true,
+              "expr": "kafka_consumer_fetch_manager_bytes_consumed_rate{topic!~\".*KSTREAM.*\", topic!~\".*KTABLE.*\", topic!=\"token-events\", topic=~\".+\"}",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "{{job}}:{{instance}} ({{topic}})",
+              "refId": "Per Instance"
+            }
+          ],
+          "title": "Byte Consumption Rate",
+          "transformations": [],
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [
+                {
+                  "options": {
+                    "trace-service": {
+                      "color": "#1F60C4",
+                      "index": 0
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*trace-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "custom.lineStyle",
+                    "value": {
+                      "fill": "solid"
+                    }
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*landscape-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "orange",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*adapter-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byFrameRefID",
+                  "options": "Per Instance"
+                },
+                "properties": [
+                  {
+                    "id": "custom.lineStyle",
+                    "value": {
+                      "dash": [0, 10],
+                      "fill": "dot"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 18
+          },
+          "id": 35,
+          "interval": "5",
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum by (job, thread_id, instance) (kafka_stream_task_dropped_records_total)",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "{{instance}}/{{thread_id}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Record Dropped Total (per instance and thread)",
+          "transformations": [],
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [
+                {
+                  "options": {
+                    "trace-service": {
+                      "color": "#1F60C4",
+                      "index": 0
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*trace-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "custom.lineStyle",
+                    "value": {
+                      "fill": "solid"
+                    }
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*landscape-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "orange",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*adapter-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byFrameRefID",
+                  "options": "Per Instance"
+                },
+                "properties": [
+                  {
+                    "id": "custom.lineStyle",
+                    "value": {
+                      "dash": [0, 10],
+                      "fill": "dot"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 18
+          },
+          "id": 33,
+          "interval": "5",
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum by (job, thread_id, instance) (kafka_stream_task_dropped_records_rate)",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "{{instance}}/{{thread_id}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Record Dropped Rate (per instance and thread)",
+          "transformations": [],
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "adapter-service average"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "landscape-service average"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "yellow",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "trace-service current"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "trace-service average"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byFrameRefID",
+                  "options": "B"
+                },
+                "properties": [
+                  {
+                    "id": "custom.lineStyle",
+                    "value": {
+                      "dash": [0, 10],
+                      "fill": "dot"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 26
+          },
+          "id": 24,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum by(group, member_host, topic) (kafka_consumergroup_group_lag{topic!=\"token-events\"})",
+              "interval": "",
+              "legendFormat": "{{group}} {{member_host}} : {{topic}}",
+              "range": true,
+              "refId": "Per Instance"
+            }
+          ],
+          "title": "Consumer Lag (per instance & topic)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "adapter-service average"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "landscape-service average"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "yellow",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "trace-service current"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "trace-service average"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byFrameRefID",
+                  "options": "B"
+                },
+                "properties": [
+                  {
+                    "id": "custom.lineStyle",
+                    "value": {
+                      "dash": [0, 10],
+                      "fill": "dot"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 26
+          },
+          "id": 36,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum by(group, topic) (kafka_consumergroup_group_lag{topic!=\"token-events\"})",
+              "interval": "",
+              "legendFormat": "{{group}} : {{topic}}",
+              "range": true,
+              "refId": "Per Instance"
+            }
+          ],
+          "title": "Consumer Lag (per group & topic)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [
+                {
+                  "options": {
+                    "trace-service": {
+                      "color": "#1F60C4",
+                      "index": 0
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*trace-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "custom.lineStyle",
+                    "value": {
+                      "fill": "solid"
+                    }
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*landscape-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "orange",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*adapter-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byFrameRefID",
+                  "options": "Per Instance"
+                },
+                "properties": [
+                  {
+                    "id": "custom.lineStyle",
+                    "value": {
+                      "dash": [0, 10],
+                      "fill": "dot"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 34
+          },
+          "id": 34,
+          "interval": "5",
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "8.1.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum by (instance, rocksdb_state_id, rocksdb_window_state_id, thread_id) (kafka_stream_state_record_e2e_latency_avg)",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "{{instance}}/{{rocksdb_state_id}}{{rocksdb_window_state_id}}/{{thread_id}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Record E2E Latency (avg.)",
+          "transformations": [],
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "ms",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineStyle": {
+                  "fill": "solid"
+                },
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "log": 10,
+                  "type": "log"
+                },
+                "showPoints": "auto",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "decimals": 2,
+              "mappings": [
+                {
+                  "options": {
+                    "match": "nan",
+                    "result": {
+                      "index": 0,
+                      "text": "0"
+                    }
+                  },
+                  "type": "special"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "ms"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*landscape-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "yellow",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*adapter-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": ".*trace-service.*"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 34
+          },
+          "id": 26,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "kafka_stream_thread_process_latency_avg",
+              "interval": "",
+              "legendFormat": "{{job}}/{{instance}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Processing Latency per Instance",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": true,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 42
+          },
+          "id": 32,
+          "panels": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "description": "Average time it took the server to respond to a request to a certain url. Only shows successful requests.",
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "axisSoftMax": 0.1,
+                    "axisSoftMin": 0,
+                    "barAlignment": 0,
+                    "drawStyle": "line",
+                    "fillOpacity": 0,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "lineInterpolation": "linear",
+                    "lineWidth": 1,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "auto",
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "area"
+                    }
+                  },
+                  "decimals": 0,
+                  "mappings": [
+                    {
+                      "options": {
+                        "0": {
+                          "index": 0,
+                          "text": "0"
+                        }
+                      },
+                      "type": "value"
+                    }
+                  ],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green"
+                      },
+                      {
+                        "color": "#EAB839",
+                        "value": 0.4
+                      },
+                      {
+                        "color": "red",
+                        "value": 1
+                      }
+                    ]
+                  },
+                  "unit": "s"
+                },
+                "overrides": []
+              },
+              "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 43
+              },
+              "id": 16,
+              "options": {
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "mode": "single",
+                  "sort": "none"
+                }
+              },
+              "targets": [
+                {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "PBFA97CFB590B2093"
+                  },
+                  "exemplar": true,
+                  "expr": "irate(http_server_requests_seconds_sum{uri!~\"/q.*|/metrics/\", job=~\"landscape-service|trace-service\", outcome = \"SUCCESS\"}[5m]) ",
+                  "format": "time_series",
+                  "instant": false,
+                  "interval": "",
+                  "intervalFactor": 1,
+                  "legendFormat": "{{uri}} ({{job}})",
+                  "refId": "A"
+                }
+              ],
+              "title": "Average HTTP Response TIme (Success)",
+              "type": "timeseries"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "description": "Inbound requests per service. Includes scraping by prometheus.",
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "mappings": [],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green"
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "gridPos": {
+                "h": 6,
+                "w": 19,
+                "x": 0,
+                "y": 51
+              },
+              "id": 13,
+              "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                  "calcs": ["lastNotNull"],
+                  "fields": "",
+                  "values": false
+                },
+                "text": {},
+                "textMode": "value_and_name"
+              },
+              "pluginVersion": "9.2.6",
+              "targets": [
+                {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "PBFA97CFB590B2093"
+                  },
+                  "exemplar": true,
+                  "expr": "round(sum by(job) ((increase(http_server_requests_seconds_count{uri!~\"/q.*|/metrics/\", outcome != \"REDIRECTION\"}[$__range]))))",
+                  "hide": false,
+                  "interval": "",
+                  "legendFormat": "{{job}}",
+                  "refId": "B"
+                }
+              ],
+              "title": "Total HTTP Requests",
+              "type": "stat"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "description": "Inbound requests per service. Includes scraping by prometheus.",
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "mappings": [],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green"
+                      }
+                    ]
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": ".*CLIENT_ERROR.*"
+                    },
+                    "properties": [
+                      {
+                        "id": "thresholds",
+                        "value": {
+                          "mode": "absolute",
+                          "steps": [
+                            {
+                              "color": "green"
+                            },
+                            {
+                              "color": "orange",
+                              "value": 1
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": ".*SERVER_ERROR.*"
+                    },
+                    "properties": [
+                      {
+                        "id": "thresholds",
+                        "value": {
+                          "mode": "absolute",
+                          "steps": [
+                            {
+                              "color": "green"
+                            },
+                            {
+                              "color": "red",
+                              "value": 1
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "gridPos": {
+                "h": 4,
+                "w": 24,
+                "x": 0,
+                "y": 57
+              },
+              "id": 14,
+              "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                  "calcs": ["lastNotNull"],
+                  "fields": "",
+                  "values": false
+                },
+                "text": {},
+                "textMode": "value_and_name"
+              },
+              "pluginVersion": "9.2.6",
+              "targets": [
+                {
+                  "datasource": {
+                    "type": "prometheus",
+                    "uid": "PBFA97CFB590B2093"
+                  },
+                  "exemplar": true,
+                  "expr": "sum by(job, outcome)\n (round(increase(http_server_requests_seconds_count{uri!~\"/q.*|/metrics/\", outcome != \"REDIRECTION\"}[$__range])))",
+                  "hide": false,
+                  "interval": "",
+                  "legendFormat": "{{job}} {{outcome}}",
+                  "refId": "B"
+                }
+              ],
+              "title": "HTTP Outcomes",
+              "type": "stat"
+            }
+          ],
+          "title": "HTTP",
+          "type": "row"
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 37,
+      "style": "dark",
+      "tags": [],
+      "templating": {
+        "list": []
+      },
+      "time": {
+        "from": "now-15m",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "ExplorViz Services",
+      "uid": "D4cxv0V7z",
+      "version": 11,
+      "weekStart": ""
+    }
+  landscape-service.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "target": {
+              "limit": 100,
+              "matchAny": false,
+              "tags": [],
+              "type": "dashboard"
+            },
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 2,
+      "id": 5,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 12,
+          "panels": [],
+          "title": "General",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 6,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 0,
+            "y": 1
+          },
+          "id": 4,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.2.4",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "sum by(job) (up{job=~\"landscape-service\"})",
+              "format": "time_series",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "{{instance}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Service Instance Count",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 10
+          },
+          "id": 10,
+          "panels": [],
+          "title": "Spans",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineStyle": {
+                  "fill": "solid"
+                },
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 0,
+            "y": 11
+          },
+          "id": 2,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "expr": "sum by (instance) (explorviz_total_received_spans_total >= 0)",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Total # of Received Spans",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "# Spans",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 12,
+            "y": 11
+          },
+          "id": 6,
+          "interval": "15s",
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "expr": "sum by (instance) (irate((explorviz_total_received_spans_total >= 0)[$time_duration]))",
+              "legendFormat": "{{instance}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "iRate of Received Spans",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 0,
+            "y": 20
+          },
+          "id": 7,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "expr": "sum by (instance) (explorviz_total_cached_spans_total >= 0)",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Total # of Cached Spans",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "# Spans",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 12,
+            "y": 20
+          },
+          "id": 5,
+          "interval": "15s",
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "expr": "sum by (instance) (rate((explorviz_total_received_spans_total >= 0)[$time_duration]))",
+              "legendFormat": "{{instance}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Rate of Received Spans",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineStyle": {
+                  "fill": "solid"
+                },
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 0,
+            "y": 29
+          },
+          "id": 8,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "expr": "sum by (instance) (explorviz_total_discarded_spans_total >= 0)",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Total # of Discarded Spans",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 38
+          },
+          "id": 14,
+          "panels": [],
+          "title": "Kafka",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 39
+          },
+          "id": 18,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "expr": "sum by (member_host, topic) (kafka_consumergroup_group_lag{group=~\"landscape.*\"})",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Consumer Lag (per instance & topic)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 39
+          },
+          "id": 20,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "expr": "sum by (topic) (kafka_consumergroup_group_topic_sum_lag{group=~\"landscape.*\"})",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Consumer Lag (topic)",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 47
+          },
+          "id": 16,
+          "panels": [],
+          "title": "HTTP",
+          "type": "row"
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 37,
+      "style": "dark",
+      "tags": [],
+      "templating": {
+        "list": [
+          {
+            "current": {
+              "selected": false,
+              "text": "30s:15s",
+              "value": "30s:15s"
+            },
+            "description": "Time Duration for Prometheus Ranges (e.g. 15s:15s)",
+            "hide": 0,
+            "label": "",
+            "name": "time_duration",
+            "options": [
+              {
+                "selected": true,
+                "text": "30s:15s",
+                "value": "30s:15s"
+              }
+            ],
+            "query": "30s:15s",
+            "skipUrlSync": false,
+            "type": "textbox"
+          }
+        ]
+      },
+      "time": {
+        "from": "now-15m",
+        "to": "now"
+      },
+      "timepicker": {
+        "hidden": false
+      },
+      "timezone": "",
+      "title": "Landscape-Service",
+      "uid": "4dgCciOVk",
+      "version": 2,
+      "weekStart": ""
+    }
+  trace-service.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "target": {
+              "limit": 100,
+              "matchAny": false,
+              "tags": [],
+              "type": "dashboard"
+            },
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": 6,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 4,
+          "panels": [],
+          "title": "General",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 6,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 0,
+            "y": 1
+          },
+          "id": 2,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.2.4",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "sum by(job) (up{job=~\"trace-service\"})",
+              "format": "time_series",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "{{instance}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Service Instance Count",
+          "type": "timeseries"
+        },
+        {
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 10
+          },
+          "id": 6,
+          "title": "Kafka",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 11
+          },
+          "id": 8,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "expr": "sum by (member_host, topic) (kafka_consumergroup_group_lag{group=~\"trace.*\"})",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Consumer Lag (per instance & topic)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 11
+          },
+          "id": 10,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "expr": "sum by (topic) (kafka_consumergroup_group_topic_sum_lag{group=~\"trace.*\"})",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Consumer Lag (topic)",
+          "type": "timeseries"
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 37,
+      "style": "dark",
+      "tags": [],
+      "templating": {
+        "list": []
+      },
+      "time": {
+        "from": "now-15m",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Trace-Service",
+      "uid": "rMrRpmOVk",
+      "version": 1,
+      "weekStart": ""
+    }
+  user-service.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "target": {
+              "limit": 100,
+              "matchAny": false,
+              "tags": [],
+              "type": "dashboard"
+            },
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": 1,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 4,
+          "panels": [],
+          "title": "General",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 2,
+                "pointSize": 6,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 0,
+            "y": 1
+          },
+          "id": 6,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.2.4",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "sum by(job) (up{job=~\"user-service\"})",
+              "format": "time_series",
+              "instant": false,
+              "interval": "",
+              "legendFormat": "{{instance}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Service Instance Count",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 10
+          },
+          "id": 2,
+          "panels": [],
+          "title": "Kafka",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "description": "Token Event sent by the user service and received by the others.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 5,
+            "x": 0,
+            "y": 11
+          },
+          "id": 8,
+          "options": {
+            "colorMode": "none",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": ["lastNotNull"],
+              "fields": "",
+              "values": false
+            },
+            "text": {},
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.2.6",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum by(job) (round(increase(kafka_consumer_fetch_manager_records_consumed_total{topic=\"token-events\"}[$__range])))",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "{{job}} received",
+              "range": true,
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "sum by(job) (round(increase(kafka_producer_topic_record_send_total{topic=\"token-events\"}[$__range])))",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "{{job}} sent",
+              "range": true,
+              "refId": "B"
+            }
+          ],
+          "title": "Token Events",
+          "transformations": [],
+          "type": "stat"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 17
+          },
+          "id": 10,
+          "panels": [],
+          "title": "HTTP",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "description": "Inbound requests per service. Includes scraping by prometheus.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineStyle": {
+                  "fill": "solid"
+                },
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 19,
+            "x": 0,
+            "y": 18
+          },
+          "id": 12,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.2.4",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+              },
+              "editorMode": "code",
+              "exemplar": true,
+              "expr": "http_server_requests_seconds_count{job=\"user-service\", uri!~\"/q.*\", outcome != \"REDIRECTION\"}",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "instance: {{instance}}, URI: {{uri}}, Method: {{method}}, HTTP Status: {{status}}",
+              "range": true,
+              "refId": "B"
+            }
+          ],
+          "title": "HTTP Requests",
+          "type": "timeseries"
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 37,
+      "style": "dark",
+      "tags": [],
+      "templating": {
+        "list": []
+      },
+      "time": {
+        "from": "now-15m",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "User-Service",
+      "uid": "ZqLZpiO4z",
+      "version": 2,
+      "weekStart": ""
+    }
 ---
-# Source: observability-demo/charts/explorviz/templates/grafana-provisioning-configmap.yaml
+# Source: explorviz/templates/grafana-provisioning-configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -30,9 +4299,105 @@ metadata:
     app: explorviz
     run: grafana
 data:
-  {}
+  default-provider.yaml: |
+    apiVersion: 1
+  
+    providers:
+      # <string> an unique provider name. Required
+      - name: "default-provider"
+        # <int> Org id. Default to 1
+        orgId: 1
+        # <string> name of the dashboard folder.
+        folder: ""
+        # <string> folder UID. will be automatically generated if not specified
+        folderUid: ""
+        # <string> provider type. Default to 'file'
+        type: file
+        # <bool> disable dashboard deletion
+        disableDeletion: false
+        # <int> how often Grafana will scan for changed dashboards
+        updateIntervalSeconds: 10
+        # <bool> allow updating provisioned dashboards from the UI
+        allowUiUpdates: true
+        options:
+          # <string, required> path to dashboard files on disk. Required when using the 'file' type
+          path: /var/lib/grafana/dashboards
+          # <bool> use folder names from filesystem to create folders in Grafana
+          foldersFromFilesStructure: true
+  prometheus.yaml: |
+    # config file version
+    apiVersion: 1
+  
+    # list of datasources that should be deleted from the database
+    deleteDatasources:
+      - name: Prometheus
+        orgId: 1
+  
+    # list of datasources to insert/update depending
+    # whats available in the database
+    datasources:
+      # <string, required> name of the datasource. Required
+      - name: Prometheus
+        # <string, required> datasource type. Required
+        type: prometheus
+        # <string, required> access mode. direct or proxy. Required
+        access: proxy
+        # <int> org id. will default to orgId 1 if not specified
+        orgId: 1
+        # <string> url
+        url: http://prometheus:9090
+        # <string> database password, if used
+        password:
+        # <string> database user, if used
+        user:
+        # <string> database name, if used
+        database:
+        # <bool> enable/disable basic auth
+        basicAuth: false
+        # <string> basic auth username, if used
+        basicAuthUser:
+        # <string> basic auth password, if used
+        basicAuthPassword:
+        # <bool> enable/disable with credentials headers
+        withCredentials:
+        # <bool> mark as default datasource. Max one per org
+        isDefault: true
+        # <map> fields that will be converted to json and stored in json_data
+        jsonData:
+          graphiteVersion: "1.1"
+          tlsAuth: false
+          tlsAuthWithCACert: false
+        # <string> json object of data that will be encrypted.
+        secureJsonData:
+          tlsCACert: "..."
+          tlsClientCert: "..."
+          tlsClientKey: "..."
+        version: 1
+        # <bool> allow users to edit datasources from the UI.
+        editable: true
 ---
-# Source: observability-demo/charts/explorviz/templates/kafka-lag-exporter-configmap.yaml
+# Source: explorviz/templates/kafka-kraft-init-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-kraft-init
+  labels:
+    app: explorviz
+    run: kafka
+data:
+  kafka_kraft_init.sh: |
+    #!/bin/sh
+    
+    # Docker workaround: Remove check for KAFKA_ZOOKEEPER_CONNECT parameter
+    sed -i '/KAFKA_ZOOKEEPER_CONNECT/d' /etc/confluent/docker/configure
+    
+    # Docker workaround: Ignore cub zk-ready
+    sed -i 's/cub zk-ready/echo ignore zk-ready/' /etc/confluent/docker/ensure
+    
+    # KRaft required step: Format the storage directory with a new cluster ID
+    echo "kafka-storage format --ignore-formatted --cluster-id=$(kafka-storage random-uuid) -c /etc/kafka/kafka.properties" >> /etc/confluent/docker/ensure
+---
+# Source: explorviz/templates/kafka-lag-exporter-configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -42,8 +4407,17 @@ metadata:
     run: kafka-lag-exporter
 data:
   application.conf: |
+    kafka-lag-exporter {
+      reporters.prometheus.port = 8000
+      clusters = [
+        {
+          name = "local-explorviz-kafka"
+          bootstrap-brokers = "kafka:9092"
+        }
+      ]
+    }
 ---
-# Source: observability-demo/charts/explorviz/templates/otel-collector-configmap.yaml
+# Source: explorviz/templates/otel-collector-configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -52,9 +4426,49 @@ metadata:
     app: explorviz
     run: otel-collector
 data:
-  otel-collector-config.yaml: |-
+  otel-collector-config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: :55678
+    
+    processors:
+      attributes/add_default_landscape_token:
+        actions:
+          - key: landscape_token
+            value: "mytokenvalue"
+            action: insert
+          - key: token_secret
+            value: "mytokensecret"
+            action: insert
+    
+    exporters:
+      kafka:
+        protocol_version: 2.0.0
+        brokers:
+          - kafka:9092
+        topic: otlp_spans
+      debug:
+        verbosity: detailed
+    
+    extensions:
+      zpages:
+        endpoint: :55679
+    
+    service:
+      extensions:
+        - zpages
+      pipelines:
+        traces:
+          receivers:
+            - otlp
+          processors:
+            - attributes/add_default_landscape_token
+          exporters:
+            - kafka
 ---
-# Source: observability-demo/charts/explorviz/templates/prometheus-configmap.yaml
+# Source: explorviz/templates/prometheus-configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -64,8 +4478,96 @@ metadata:
     run: prometheus
 data:
   prometheus.yml: |
+    # my global config
+    global:
+      scrape_interval: 15s # By default, scrape targets every 15 seconds.
+      evaluation_interval: 15s # By default, scrape targets every 15 seconds.
+      # scrape_timeout is set to the global default (10s).
+    
+    # Load and evaluate rules in this file every 'evaluation_interval' seconds.
+    rule_files:
+      # - "alert.rules"
+      # - "first.rules"
+      # - "second.rules"
+    
+    # A scrape configuration containing exactly one endpoint to scrape:
+    # Here it's Prometheus itself.
+    scrape_configs:
+      # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+    
+      - job_name: "kafka-lag-exporter"
+        # metrics_path defaults to '/metrics'
+        # scheme defaults to 'http'.
+        static_configs:
+          - targets: ["kafka-lag-exporter:8000"]
+    
+      - job_name: "adapter-service"
+        metrics_path: "/q/metrics"
+        dns_sd_configs:
+          - names:
+              - "adapter-service"
+            type: "A"
+            port: 8080
+        static_configs:
+          - targets:
+              - "host.docker.internal:8087" # dev-mode
+    
+      - job_name: "landscape-service"
+        metrics_path: "/q/metrics"
+        dns_sd_configs:
+          - names:
+              - "landscape-service"
+            type: "A"
+            port: 8080
+        static_configs:
+          - targets:
+              - "host.docker.internal:8082" # dev-mode
+    
+      - job_name: "trace-service"
+        metrics_path: "/q/metrics"
+        dns_sd_configs:
+          - names:
+              - "trace-service"
+            type: "A"
+            port: 8080
+        static_configs:
+          - targets:
+              - "host.docker.internal:8083" # dev-mode
+    
+      - job_name: "user-service"
+        metrics_path: "/q/metrics"
+        dns_sd_configs:
+          - names:
+              - "user-service"
+            type: "A"
+            port: 8080
+        static_configs:
+          - targets:
+              - "host.docker.internal:8084" # dev-mode
+    
+      - job_name: "push-service"
+        metrics_path: "/q/metrics"
+        dns_sd_configs:
+          - names:
+              - "push-service"
+            type: "A"
+            port: 8080
+        static_configs:
+          - targets:
+              - "host.docker.internal:8086" # dev-mode
+    
+      - job_name: "collaboration-service"
+        metrics_path: "/q/metrics"
+        dns_sd_configs:
+          - names:
+              - "push-service"
+            type: "A"
+            port: 8080
+        static_configs:
+          - targets:
+              - "host.docker.internal:8085" # dev-mode
 ---
-# Source: observability-demo/charts/explorviz/templates/grafana-pvc.yaml
+# Source: explorviz/templates/grafana-pvc.yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -79,7 +4581,7 @@ spec:
     requests:
       storage: 2Gi
 ---
-# Source: observability-demo/charts/explorviz/templates/prometheus-pvc.yaml
+# Source: explorviz/templates/prometheus-pvc.yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -93,26 +4595,7 @@ spec:
     requests:
       storage: 5Gi
 ---
-# Source: observability-demo/charts/explorviz/templates/adapter-service-service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: adapter-service
-  labels:
-    app: explorviz
-    run: adapter-service
-spec:
-  type: ClusterIP
-  ports:
-    - name: http
-      port: 8087
-      targetPort: http
-      protocol: TCP
-  selector:
-    app: explorviz
-    run: adapter-service
----
-# Source: observability-demo/charts/explorviz/templates/cassandra-service.yaml
+# Source: explorviz/templates/cassandra-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -130,7 +4613,7 @@ spec:
       port: 9042
       targetPort: 9042
 ---
-# Source: observability-demo/charts/explorviz/templates/collaboration-service-service.yaml
+# Source: explorviz/templates/collaboration-service-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -149,7 +4632,7 @@ spec:
       targetPort: http
       protocol: TCP
 ---
-# Source: observability-demo/charts/explorviz/templates/frontend-service.yaml
+# Source: explorviz/templates/frontend-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -165,10 +4648,10 @@ spec:
   ports:
     - name: http
       port: 80
-      targetPort: 8082
+      targetPort: 8080
       protocol: TCP
 ---
-# Source: observability-demo/charts/explorviz/templates/kafka-lag-exporter-service.yaml
+# Source: explorviz/templates/kafka-lag-exporter-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -186,7 +4669,7 @@ spec:
       port: 8000
       targetPort: 8000
 ---
-# Source: observability-demo/charts/explorviz/templates/kafka-service.yaml
+# Source: explorviz/templates/kafka-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -206,14 +4689,14 @@ spec:
     - name: external
       port: 9091
       targetPort: 9091
-    - name: controller
-      port: 29093
-      targetPort: 29093
+    # - name: controller
+    #   port: 
+    #   targetPort: 
     - name: jmx
       port: 9101
       targetPort: 9101
 ---
-# Source: observability-demo/charts/explorviz/templates/mongo-user-service.yaml
+# Source: explorviz/templates/mongo-user-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -231,7 +4714,7 @@ spec:
       port: 27017
       targetPort: 27017
 ---
-# Source: observability-demo/charts/explorviz/templates/otel-collector-service.yaml
+# Source: explorviz/templates/otel-collector-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -252,7 +4735,7 @@ spec:
       port: 55679
       targetPort: 55679
 ---
-# Source: observability-demo/charts/explorviz/templates/prometheus-service.yaml
+# Source: explorviz/templates/prometheus-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -270,7 +4753,7 @@ spec:
       port: 9090
       targetPort: 9090
 ---
-# Source: observability-demo/charts/explorviz/templates/redis-service.yaml
+# Source: explorviz/templates/redis-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -289,7 +4772,7 @@ spec:
       protocol: TCP
   type: ClusterIP
 ---
-# Source: observability-demo/charts/explorviz/templates/schema-registry-service.yaml
+# Source: explorviz/templates/schema-registry-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -307,7 +4790,7 @@ spec:
       port: 8081
       targetPort: 8081
 ---
-# Source: observability-demo/charts/explorviz/templates/span-service-service.yaml
+# Source: explorviz/templates/span-service-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -326,7 +4809,26 @@ spec:
       targetPort: http
       protocol: TCP
 ---
-# Source: observability-demo/charts/explorviz/templates/user-service-deployment.yaml
+# Source: explorviz/templates/trace-generator-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: trace-generator
+  labels:
+    app: explorviz
+    run: trace-generator
+spec:
+  selector:
+    app: explorviz
+    run: trace-generator
+  ports:
+    - name: http
+      port: 8079
+      targetPort: 8079
+      protocol: TCP
+      type: ClusterIP
+---
+# Source: explorviz/templates/user-service-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -345,204 +4847,7 @@ spec:
       targetPort: http
       protocol: TCP
 ---
-# Source: observability-demo/charts/teastore/templates/otel-transformer-service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: otel-transformer
-  labels:
-    app: teastore
-    run: otel-transformer
-spec:
-  type: ClusterIP
-  ports:
-    - port: 10001
-      protocol: TCP
-  selector:
-    app: teastore
-    run: otel-transformer
----
-# Source: observability-demo/charts/teastore/templates/teastore-auth-service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: teastore-auth
-  labels:
-    app: teastore
-    run: teastore-auth
-spec:
-  ports:
-    - name: http
-      port: 8080
-      protocol: TCP
-  selector:
-    app: teastore
-    run: teastore-auth
----
-# Source: observability-demo/charts/teastore/templates/teastore-db-service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: teastore-db
-  labels:
-    app: teastore
-    run: teastore-db
-spec:
-  type: ClusterIP
-  selector:
-    app: teastore
-    run: teastore-db
-  ports:
-    - name: mysql
-      port: 3306
-      protocol: TCP
----
-# Source: observability-demo/charts/teastore/templates/teastore-image-service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: teastore-image
-  labels:
-    app: teastore
-    run: teastore-image
-spec:
-  ports:
-    - port: 
-      protocol: TCP
-  selector:
-    app: teastore
-    run: teastore-image
----
-# Source: observability-demo/charts/teastore/templates/teastore-jmeter-service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: teastore-jmeter
-  labels:
-    app: teastore
-    run: teastore-jmeter
-spec:
-  type: ClusterIP
-  ports:
-    - port: 8080
-      protocol: TCP
-  selector:
-    app: teastore
-    run: teastore-jmeter
----
-# Source: observability-demo/charts/teastore/templates/teastore-persistence-service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: teastore-persistence
-  labels:
-    app: teastore
-    run: teastore-persistence
-spec:
-  ports:
-    - port: 
-      protocol: TCP
-  selector:
-    app: teastore
-    run: teastore-persistence
----
-# Source: observability-demo/charts/teastore/templates/teastore-recommender-service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: teastore-recommender
-  labels:
-    app: teastore
-    run: teastore-recommender
-spec:
-  ports:
-    - port: 8080
-      protocol: TCP
-  selector:
-    app: teastore
-    run: teastore-recommender
----
-# Source: observability-demo/charts/teastore/templates/teastore-registry-service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: teastore-registry
-  labels: 
-     app: teastore
-     run: teastore-registry 
-spec:
-  type: ClusterIP
-  selector:  
-    app: teastore
-    run: teastore-registry 
-  ports:
-      port: 8080
-      protocol: TCP
----
-# Source: observability-demo/charts/teastore/templates/teastore-webui-nodeport.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: teastore-webui
-  labels:
-    app: teastore
-    run: teastore-webui
-spec:
-  type: NodePort
-  ports:
-    - name: http
-      port: 
-      targetPort: 
-      protocol: TCP
-      nodePort: 8080
-  selector:
-    app: teastore
-    run: teastore-webui
----
-# Source: observability-demo/charts/explorviz/templates/adapter-service-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: adapter-service
-  labels:
-    app: explorviz
-    run: adapter-service
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: explorviz
-      run: adapter-service
-  template:
-    metadata:
-      labels:
-        app: explorviz
-        run: adapter-service
-    spec:
-      terminationGracePeriodSeconds: 0
-      containers:
-        - name: adapter-service
-          image: "explorviz/adapter-service-jvm:kieker-2025"
-          imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 8087
-              name: http
-          env:
-            - name: EXPLORVIZ_LOG_LVL
-              value: "DEBUG"
-            - name: EXPLORVIZ_VALIDATE_TOKEN_EXISTENCE
-              value: "true"
-            - name: QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL
-              value: "http://schema-registry:8081"
-          
-          readinessProbe:
-            httpGet:
-              path: /q/health
-              port: 8087
-            initialDelaySeconds: 15
-            periodSeconds: 5
----
-# Source: observability-demo/charts/explorviz/templates/collaboration-service-deployment.yaml
+# Source: explorviz/templates/collaboration-service-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -565,7 +4870,7 @@ spec:
       terminationGracePeriodSeconds: 0
       containers:
         - name: collaboration-service
-          image: ":"
+          image: "explorviz/collaboration-service:latest"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4444
@@ -577,21 +4882,21 @@ spec:
               value: "6379"
 
           # ✅ Optional health checks
-          readinessProbe:
-            httpGet:
-              path: /q/health
-              port: 4444
-            initialDelaySeconds: 10
-            periodSeconds: 5
+          # readinessProbe:
+          #   httpGet:
+          #     path: /q/health
+          #     port: 4444
+          #   initialDelaySeconds: 10
+          #   periodSeconds: 5
 
-          livenessProbe:
-            httpGet:
-              path: /q/health/live
-              port: 4444
-            initialDelaySeconds: 20
-            periodSeconds: 10
+          # livenessProbe:
+          #   httpGet:
+          #     path: /q/health/live
+          #     port: 4444
+          #   initialDelaySeconds: 20
+          #   periodSeconds: 10
 ---
-# Source: observability-demo/charts/explorviz/templates/frontend-deployment.yaml
+# Source: explorviz/templates/frontend-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -614,10 +4919,10 @@ spec:
       terminationGracePeriodSeconds: 0
       containers:
         - name: frontend
-          image: "explorviz/frontend:kieker-2025"
+          image: "explorviz/frontend:latest"
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8082
+            - containerPort: 8080
               name: http
           env:
             - name: AUTH0_CALLBACK_URL
@@ -627,13 +4932,13 @@ spec:
             - name: AUTH0_LOGO_URL
               value: "http://localhost:8080/images/explorviz-logo.png"
             - name: CODE_SERV_URL
-              value: "http://localhost:8082"
+              value: "http://localhost:80"
             - name: COLLABORATION_URL
               value: "http://collaboration-service:4444"
             - name: FRONTEND_HOST_NAME
               value: "localhost"
             - name: FRONTEND_HOST_URL
-              value: "http://localhost:8082"
+              value: "http://localhost:80"
             - name: LANDSCAPE_URL
               value: "http://span-service:8080"
             - name: NO_AUTH_USER_NICKNAME
@@ -645,25 +4950,25 @@ spec:
             - name: USER_URL
               value: "http://user-service:8080"
             - name: VSCODE_SERV_URL
-              value: "http://localhost:8082"
+              value: "http://localhost:80"
 
           # ✅ Readiness probe
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 8082
-            initialDelaySeconds: 10
-            periodSeconds: 5
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: 8080
+          #   initialDelaySeconds: 10
+          #   periodSeconds: 5
 
-          # ✅ Liveness probe
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 8082
-            initialDelaySeconds: 20
-            periodSeconds: 10
+          # # ✅ Liveness probe
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: 8080
+          #   initialDelaySeconds: 20
+          #   periodSeconds: 10
 ---
-# Source: observability-demo/charts/explorviz/templates/grafana-deployment.yaml
+# Source: explorviz/templates/grafana-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -722,7 +5027,7 @@ spec:
           persistentVolumeClaim:
             claimName: grafana-data
 ---
-# Source: observability-demo/charts/explorviz/templates/kafka-lag-exporter-deployment.yaml
+# Source: explorviz/templates/kafka-lag-exporter-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -762,7 +5067,7 @@ spec:
           configMap:
             name: kafka-lag-exporter-config
 ---
-# Source: observability-demo/charts/explorviz/templates/otel-collector-deployment.yaml
+# Source: explorviz/templates/otel-collector-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -785,7 +5090,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
         - name: otel-collector
-          image: "kieker/opentelemetry-collector:kieker-2025"
+          image: " otel/opentelemetry-collector-contrib"
           imagePullPolicy: IfNotPresent
           args: ["--config=/etc/otel-collector-config.yaml"]
           ports:
@@ -802,7 +5107,7 @@ spec:
           configMap:
             name: otel-collector-config
 ---
-# Source: observability-demo/charts/explorviz/templates/prometheus-deployment.yaml
+# Source: explorviz/templates/prometheus-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -848,7 +5153,7 @@ spec:
           persistentVolumeClaim:
             claimName: prometheus-data
 ---
-# Source: observability-demo/charts/explorviz/templates/redis-deployment.yaml
+# Source: explorviz/templates/redis-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -874,7 +5179,7 @@ spec:
           ports:
             - containerPort: 6379
 ---
-# Source: observability-demo/charts/explorviz/templates/schema-registry-deployment.yaml
+# Source: explorviz/templates/schema-registry-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -903,22 +5208,26 @@ spec:
             - containerPort: 8081
               name: http
           env:
+            - name: SCHEMA_REGISTRY_HOST_NAME
+              value: "127.0.0.1"
             - name: SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS
               value: "PLAINTEXT://kafka:9092"
+            - name: SCHEMA_REGISTRY_LISTENERS
+              value: "http://0.0.0.0:8081"
           volumeMounts:
             - name: schema-registry-secrets
               mountPath: /etc/schema-registry/secrets
-          readinessProbe:
-            httpGet:
-              path: /subjects
-              port: 8081
-            initialDelaySeconds: 10
-            periodSeconds: 5
+          # readinessProbe:
+          #   httpGet:
+          #     path: /subjects
+          #     port: 8081
+          #   initialDelaySeconds: 10
+          #   periodSeconds: 5
       volumes:
         - name: schema-registry-secrets
           emptyDir: {}
 ---
-# Source: observability-demo/charts/explorviz/templates/span-service-deployment.yaml
+# Source: explorviz/templates/span-service-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -941,7 +5250,7 @@ spec:
       terminationGracePeriodSeconds: 0
       containers:
         - name: span-service
-          image: "explorviz/span-service-jvm:kieker-2025"
+          image: "explorviz/span-service-jvm:latest"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
@@ -962,23 +5271,50 @@ spec:
             - name: QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL
               value: "http://schema-registry:8081"
 
-          # ✅ Readiness probe (replaces depends_on)
-          readinessProbe:
-            httpGet:
-              path: /q/health
-              port: 8080
-            initialDelaySeconds: 20
-            periodSeconds: 5
+          # # ✅ Readiness probe (replaces depends_on)
+          # readinessProbe:
+          #   httpGet:
+          #     path: /q/health
+          #     port: 8080
+          #   initialDelaySeconds: 20
+          #   periodSeconds: 5
 
-          # ✅ Liveness probe (auto-restart if unhealthy)
-          livenessProbe:
-            httpGet:
-              path: /q/health/live
-              port: 8080
-            initialDelaySeconds: 30
-            periodSeconds: 10
+          # # ✅ Liveness probe (auto-restart if unhealthy)
+          # livenessProbe:
+          #   httpGet:
+          #     path: /q/health/live
+          #     port: 8080
+          #   initialDelaySeconds: 30
+          #   periodSeconds: 10
 ---
-# Source: observability-demo/charts/explorviz/templates/user-service-service.yaml
+# Source: explorviz/templates/trace-generator-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trace-generator
+  labels:
+    app: explorviz
+    run: trace-generator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: explorviz
+      run: trace-generator
+  template:
+    metadata:
+      labels:
+        app: explorviz
+        run: trace-generator
+    spec:
+      containers:
+        - name: trace-generator
+          image: "explorviz/trace-generator"
+          ports:
+            - containerPort: 8079
+          imagePullPolicy: IfNotPresent
+---
+# Source: explorviz/templates/user-service-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -1001,7 +5337,7 @@ spec:
       terminationGracePeriodSeconds: 0
       containers:
         - name: user-service
-          image: "explorviz/user-service-jvm:kieker-2025"
+          image: "explorviz/user-service-jvm:latest"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
@@ -1021,405 +5357,20 @@ spec:
               value: "mongodb://mongo-user:27017"
             - name: QUARKUS_OIDC_ENABLED
               value: "false"
-          readinessProbe:
-            httpGet:
-              path: /q/health
-              port: 8080
-            initialDelaySeconds: 20
-            periodSeconds: 5
-          livenessProbe:
-            httpGet:
-              path: /q/health/live
-              port: 8080
-            initialDelaySeconds: 30
-            periodSeconds: 10
+          # readinessProbe:
+          #   httpGet:
+          #     path: /q/health
+          #     port: 8080
+          #   initialDelaySeconds: 20
+          #   periodSeconds: 5
+          # livenessProbe:
+          #   httpGet:
+          #     path: /q/health/live
+          #     port: 8080
+          #   initialDelaySeconds: 30
+          #   periodSeconds: 10
 ---
-# Source: observability-demo/charts/teastore/templates/otel-transformer-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: otel-transformer
-  labels:
-    app: teastore
-    run: otel-transformer
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: teastore
-      run: otel-transformer
-  template:
-    metadata:
-      labels:
-        app: teastore
-        run: otel-transformer
-    spec:
-      containers:
-        - name: otel-transformer
-          image: "kieker/otel-transformer:kieker-2.0.2"
-          ports:
-            - containerPort: 10001
----
-# Source: observability-demo/charts/teastore/templates/teastore-auth-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: teastore-auth
-  labels:
-    app: teastore
-    run: teastore-auth
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: teastore
-      run: teastore-auth
-  template:
-    metadata:
-      labels:
-        app: teastore
-        run: teastore-auth
-    spec:
-      terminationGracePeriodSeconds: 0
-      containers:
-        - name: teastore-auth
-          image: "kieker/teastore-auth:kieker-2.0.2"
-          ports:
-            - containerPort: 8080
-          env:
-            - name: HOST_NAME
-              value: "teastore-auth"
-            - name: REGISTRY_HOST
-              value: "teastore-registry"
-            - name: RABBITMQ_HOST
-              value: "teastore-rabbitmq"
-          readinessProbe:
-            httpGet:
-              path: "/tools.descartes.teastore.auth/rest/ready/isready"
-              port: 8080
-              scheme: HTTP
-            initialDelaySeconds: 15
-            timeoutSeconds: 5
-            periodSeconds: 5
-            successThreshold: 1
-            failureThreshold: 3
-          resources:
-            requests:
-              cpu: 200m
-              memory: 256Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
----
-# Source: observability-demo/charts/teastore/templates/teastore-db-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: teastore-db
-  labels:
-    app: teastore
-    run: teastore-db
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: teastore
-      run: teastore-db
-  template:
-    metadata:
-      labels:
-        app: teastore
-        run: teastore-db
-    spec:
-      containers:
-        - name: teastore-db
-          image: "kieker/teastore-db:kieker-2.0.2"
-          ports:
-            - name: mysql
-              containerPort: 3306
-              protocol: TCP
-          resources:
-            requests:
-              cpu: 1000m
-              memory: 1000Mi
-            limits:
-              cpu: 2000m
-              memory: 2000Mi
----
-# Source: observability-demo/charts/teastore/templates/teastore-image-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: teastore-image
-  labels:
-    app: teastore
-    run: teastore-image
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: teastore
-      run: teastore-image
-  template:
-    metadata:
-      labels:
-        app: teastore
-        run: teastore-image
-    spec:
-      terminationGracePeriodSeconds: 0
-      containers:
-        - name: teastore-image
-          image: "kieker/teastore-image:kieker-2.0.2"
-          ports:
-            - containerPort: 8080
-          env:
-            - name: HOST_NAME
-              value: "teastore-image"
-            - name: REGISTRY_HOST
-              value: "teastore-registry"
-            - name: RABBITMQ_HOST
-              value: "teastore-rabbitmq"
-          readinessProbe:
-            httpGet:
-              path: "/tools.descartes.teastore.image/rest/image/finished"
-              port: 8080
-              scheme: HTTP
-            initialDelaySeconds: 15
-            timeoutSeconds: 5
-            periodSeconds: 10
-            successThreshold: 1
-            failureThreshold: 3
-          resources:
-            requests:
-              cpu: 200m
-              memory: 256Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
----
-# Source: observability-demo/charts/teastore/templates/teastore-jmeter-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: teastore-jmeter
-  labels:
-    app: teastore
-    run: teastore-jmeter
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: teastore
-      run: teastore-jmeter
-  template:
-    metadata:
-      labels:
-        app: teastore
-        run: teastore-jmeter
-    spec:
-      terminationGracePeriodSeconds: 0
-      containers:
-        - name: teastore-jmeter
-          image: "kieker/teastore-jmeter:kieker-2.0.2"
-          ports:
-            - containerPort: 8080
----
-# Source: observability-demo/charts/teastore/templates/teastore-persistence-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: teastore-persistence
-  labels:
-    app: teastore
-    run: teastore-persistence
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: teastore
-      run: teastore-persistence
-  template:
-    metadata:
-      labels:
-        app: teastore
-        run: teastore-persistence
-    spec:
-      containers:
-        - name: teastore-persistence
-          image: "kieker/teastore-persistence:kieker-2.0.2"
-          ports:
-            - name: http
-              containerPort: 8080
-              protocol: TCP
-          env:
-            - name: HOST_NAME
-              value: "teastore-persistence"
-            - name: REGISTRY_HOST
-              value: "teastore-registry"
-            - name: DB_HOST
-              value: "teastore-db"
-            - name: DB_PORT
-              value: "3306"
-            - name: RABBITMQ_HOST
-              value: "teastore-rabbitmq"
-          readinessProbe:
-            httpGet:
-              path: /tools.descartes.teastore.persistence/rest/ready/isready
-              port: 8080
-              scheme: HTTP
-          livenessProbe:
-            httpGet:
-              path: /tools.descartes.teastore.persistence/rest/ready/isready
-              port: 8080
-              scheme: HTTP
----
-# Source: observability-demo/charts/teastore/templates/teastore-recommender-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: teastore-recommender
-  labels:
-    app: teastore
-    run: teastore-recommender
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: teastore
-      run: teastore-recommender
-  template:
-    metadata:
-      labels:
-        app: teastore
-        run: teastore-recommender
-    spec:
-      terminationGracePeriodSeconds: 0
-      containers:
-        - name: teastore-recommender
-          image: "kieker/teastore-recommender:kieker-2.0.2"
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8080
-          env:
-            - name: HOST_NAME
-              value: "teastore-recommender"
-            - name: REGISTRY_HOST
-              value: "teastore-registry"
-            - name: RABBITMQ_HOST
-              value: "teastore-rabbitmq"
-          readinessProbe:
-            httpGet:
-              path: "/tools.descartes.teastore.recommender/rest/train/isready"
-              port: 8080
-              scheme: HTTP
-            initialDelaySeconds: 15
-            timeoutSeconds: 5
-            periodSeconds: 10
-            successThreshold: 1
-            failureThreshold: 3
-          resources:
-            requests:
-              cpu: 500m
-              memory: 512Mi
-            limits:
-              cpu: 1000m
-              memory: 1024Mi
----
-# Source: observability-demo/charts/teastore/templates/teastore-registry-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: teastore-registry
-  labels: 
-     app: teastore
-     run: teastore-registry
-spec:
-  replicas: 1
-  selector:
-    matchLabels: 
-      app: teastore
-      run: teastore-registry 
-  template:
-    metadata:
-      labels: 
-         app: teastore
-         run: teastore-registry 
-    spec:
-      containers:
-        - name: teastore-registry
-          image: "kieker/teastore-registry:kieker-2.0.2"
-          ports:
-            - containerPort: 8080
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 8080
-              scheme: HTTP
-            initialDelaySeconds: 5     # wait 5s before first check
-            periodSeconds: 5           # check every 5s
-            failureThreshold: 6        # fail after 6 * 5s = 30s
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 8080
-              scheme: HTTP
-            initialDelaySeconds: 30    # wait 30s before first check
-            periodSeconds: 10          # check every 10s
-            failureThreshold: 3
----
-# Source: observability-demo/charts/teastore/templates/teastore-webui-deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: teastore-webui
-  labels:
-    app: teastore
-    run: teastore-webui
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: teastore
-      run: teastore-webui
-  template:
-    metadata:
-      labels:
-        app: teastore
-        run: teastore-webui
-    spec:
-      terminationGracePeriodSeconds: 0
-      containers:
-        - name: teastore-webui
-          image: "kieker/teastore-webui:kieker-2.0.2"
-          ports:
-            - name: http
-              containerPort: 8080
-          env:
-            - name: HOST_NAME
-              value: "teastore-webui"
-            - name: REGISTRY_HOST
-              value: "teastore-registry"
-            - name: RABBITMQ_HOST
-              value: "teastore-rabbitmq"
-          readinessProbe:
-            httpGet:
-              path: "/tools.descartes.teastore.webui/status"
-              port: 8080
-              scheme: HTTP
-            initialDelaySeconds: 15
-            timeoutSeconds: 5
-            periodSeconds: 10
-            successThreshold: 1
-            failureThreshold: 3
-          resources:
-            requests:
-              cpu: 300m
-              memory: 512Mi
-            limits:
-              cpu: 700m
-              memory: 1024Mi
----
-# Source: observability-demo/charts/explorviz/templates/cassandra-statefulset.yaml
+# Source: explorviz/templates/cassandra-statefulset.yaml
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -1480,7 +5431,7 @@ spec:
           requests:
             storage: 5Gi
 ---
-# Source: observability-demo/charts/explorviz/templates/kafka-statefulset.yaml
+# Source: explorviz/templates/kafka-statefulset.yaml
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -1505,15 +5456,14 @@ spec:
       containers:
         - name: kafka
           image: "confluentinc/cp-kafka:7.3.0"
+          imagePullPolicy: IfNotPresent
+
           ports:
-            - name: internal
-              containerPort: 9092
             - name: external
               containerPort: 9091
-            - name: controller
-              containerPort: 29093
             - name: jmx
               containerPort: 9101
+
           env:
             - name: KAFKA_ADVERTISED_LISTENERS
               value: "PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9091"
@@ -1522,7 +5472,7 @@ spec:
             - name: KAFKA_CONTROLLER_LISTENER_NAMES
               value: "CONTROLLER"
             - name: KAFKA_CONTROLLER_QUORUM_VOTERS
-              value: "1@kafka:29093"
+              value: "1@localhost:29093"
             - name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS
               value: "0"
             - name: KAFKA_INTER_BROKER_LISTENER_NAME
@@ -1532,9 +5482,9 @@ spec:
             - name: KAFKA_JMX_PORT
               value: "9101"
             - name: KAFKA_LISTENERS
-              value: "PLAINTEXT://kafka:9092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9091"
+              value: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST=://0.0.0.0:9091"
             - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
-              value: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+              value: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
             - name: KAFKA_MESSAGE_MAX_BYTES
               value: "10485880"
             - name: KAFKA_NODE_ID
@@ -1547,22 +5497,63 @@ spec:
               value: "1"
             - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
               value: "1"
+
+          # Mount Kafka volumes and init script
           volumeMounts:
             - name: kafka-data
               mountPath: /var/lib/kafka/data
             - name: kafka-secrets
               mountPath: /etc/kafka/secrets
-          readinessProbe:
-            exec:
-              command:
-                - sh
-                - -c
-                - kafka-topics --bootstrap-server kafka:9092 --list || exit 1
-            initialDelaySeconds: 30
-            periodSeconds: 15
+            # - name: kafka-kraft-init
+            #   mountPath: /tmp/update_run.sh
+            #   subPath: kafka_kraft_init.sh
+
+          # Run init script before starting Kafka
+          command:
+              - bash
+              - -c
+              - |
+                # Remove ZooKeeper checks
+                sed -i '/KAFKA_ZOOKEEPER_CONNECT/d' /etc/confluent/docker/configure
+                sed -i 's/cub zk-ready/echo ignore zk-ready/' /etc/confluent/docker/ensure
+
+                # Generate Kafka configs first (creates /etc/kafka/kafka.properties)
+                /etc/confluent/docker/configure
+
+                # Pick the config file to use for formatting
+                CONFIG_FILE="/etc/kafka/kafka.properties"
+                if [ ! -f "$CONFIG_FILE" ]; then
+                  if [ -f /etc/kafka/kraft/server.properties ]; then
+                    CONFIG_FILE="/etc/kafka/kraft/server.properties"
+                  elif [ -f /etc/kafka/server.properties ]; then
+                    CONFIG_FILE="/etc/kafka/server.properties"
+                  fi
+                fi
+                echo "Using config file: $CONFIG_FILE"
+
+                # Format the KRaft storage once
+                if [ ! -f /var/lib/kafka/data/meta.properties ]; then
+                  echo "Formatting storage for KRaft..."
+                  kafka-storage format --ignore-formatted --cluster-id=$(kafka-storage random-uuid) -c "$CONFIG_FILE"
+                fi
+
+                exec /etc/confluent/docker/run
+          # readinessProbe:
+          #   exec:
+          #     command:
+          #       - sh
+          #       - -c
+          #       - kafka-topics --bootstrap-server localhost:9092 --list || exit 1 
+          #   initialDelaySeconds: 30
+          #   periodSeconds: 15
+
       volumes:
         - name: kafka-secrets
           emptyDir: {}
+        # - name: kafka-kraft-init
+        #   configMap:
+        #     name: kafka-kraft-init
+
   volumeClaimTemplates:
     - metadata:
         name: kafka-data
@@ -1572,7 +5563,7 @@ spec:
           requests:
             storage: 5Gi
 ---
-# Source: observability-demo/charts/explorviz/templates/mongo-user-statefulset.yaml
+# Source: explorviz/templates/mongo-user-statefulset.yaml
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -1622,7 +5613,7 @@ spec:
           requests:
             storage: 500Mi
 ---
-# Source: observability-demo/charts/explorviz/templates/init-cassandra-job.yaml
+# Source: explorviz/templates/init-cassandra-job.yaml
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -1641,8 +5632,19 @@ spec:
       containers:
         - name: init-cassandra
           image: kieker/init-cassandra:kieker-2025
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              echo "⏳ Waiting for Cassandra to become available..."
+              until nc -z cassandra 9042; do
+                echo "Cassandra not ready yet... sleeping 5s"
+                sleep 5
+              done
+              echo "✅ Cassandra is up — initializing keyspaces"
+              /opt/cassandra/bin/cqlsh cassandra -f /opt/cassandra/init.cql
+              echo "🎉 Initialization complete!"
 ---
-# Source: observability-demo/charts/explorviz/templates/init-kafka-job.yaml
+# Source: explorviz/templates/init-kafka-job.yaml
 apiVersion: batch/v1
 kind: Job
 metadata:

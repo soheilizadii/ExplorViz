@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: trace-generator
+  labels:
+    app: explorviz
+    run: trace-generator
+spec:
+  type: {{ .Values.service.type}}
+  selector:
+    app: explorviz
+    run: trace-generator
+  ports:
+    - name: http
+      port: {{ .Values.traceGenerator.port }}
+      targetPort: {{ .Values.traceGenerator.port }}
+      protocol: TCP
+
+

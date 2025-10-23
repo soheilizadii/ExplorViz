@@ -17,9 +17,9 @@ spec:
     - name: external
       port: {{ .Values.kafka.ports.external }}
       targetPort: {{ .Values.kafka.ports.external }}
-    - name: controller
-      port: {{ .Values.kafka.ports.controller }}
-      targetPort: {{ .Values.kafka.ports.controller }}
+    # - name: controller
+    #   port: {{ .Values.kafka.ports.controller }}
+    #   targetPort: {{ .Values.kafka.ports.controller }}
     - name: jmx
       port: {{ .Values.kafka.ports.jmx }}
       targetPort: {{ .Values.kafka.ports.jmx }}

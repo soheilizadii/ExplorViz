@@ -25,12 +25,8 @@ spec:
           imagePullPolicy: IfNotPresent
 
           ports:
-            - name: internal
-              containerPort: {{ .Values.kafka.ports.internal }}
             - name: external
               containerPort: {{ .Values.kafka.ports.external }}
-            - name: controller
-              containerPort: {{ .Values.kafka.ports.controller }}
             - name: jmx
               containerPort: {{ .Values.kafka.ports.jmx }}
 

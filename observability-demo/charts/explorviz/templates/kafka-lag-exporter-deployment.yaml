@@ -18,6 +18,10 @@ spec:
         run: kafka-lag-exporter
     spec:
       terminationGracePeriodSeconds: 10
+      initContainers:
+        - name: wait-for-init-kafka
+          image: confluentinc/cp-kafka:7.3.0
+          command: ["sh", "-c", "until kafka-topics --bootstrap-server kafka:9092 --list | grep explorviz-spans; do echo 'Waiting for topics...'; sleep 5; done"]
       containers:
         - name: kafka-lag-exporter
           image: "{{ .Values.image.kafkaLagExporter }}:{{ .Values.image.kafkaLagExporterTag }}"
