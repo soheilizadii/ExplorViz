@@ -18,6 +18,23 @@ spec:
         run: collaboration-service
     spec:
       terminationGracePeriodSeconds: 0
+      initContainers:
+        - name: wait-for-dependencies
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              echo "⏳ Waiting for Kafka and Schema Registry to be ready..."
+              until nc -z kafka 9092; do
+                echo "Kafka not ready yet... sleeping 5s"
+                sleep 5
+              done
+              until nc -z schema-registry 8081; do
+                echo "Schema Registry not ready yet... sleeping 5s"
+                sleep 5
+              done
+              echo "✅ All dependencies are ready. Starting collaboration-service!"
       containers:
         - name: collaboration-service
           image: "{{ .Values.image.collaboration }}:{{ .Values.image.tag }}"

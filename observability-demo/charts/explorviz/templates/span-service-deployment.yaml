@@ -20,13 +20,12 @@ spec:
       terminationGracePeriodSeconds: 0
       initContainers:
         - name: wait-for-schema-registry
-          image: busybox
+          image: curlimages/curl:8.7.1
           command:
             - sh
             - -c
             - |
-                echo "⏳ Waiting for Schema Registry at http://schema-registry:8081...";
-                until nc -z schema-registry 8081; do
+                until curl -sf http://schema-registry:8081/subjects | grep -q "\["; do
                   echo "Schema Registry not ready yet... sleeping 5s";
                   sleep 5;
                 done;
