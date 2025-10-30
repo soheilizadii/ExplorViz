@@ -27,15 +27,6 @@ image:
 service:
   type: ClusterIP
 
-# ---------- Adapter Service ----------
-adapter:
-  port: 8087
-  replicaCount: 1    # from ADAPTER_REPLICAS
-  env:
-    QUARKUS_KAFKA_STREAMS_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
-    EXPLORVIZ_LOG_LVL: "DEBUG"
-    EXPLORVIZ_VALIDATE_TOKEN_EXISTENCE: "true"
-
 # ---------- Span Service ----------
 span:
   port: 8080
@@ -83,7 +74,7 @@ frontend:
   port: 80
   replicaCount: 1
   env:
-    FRONTEND_HOST_URL: "http://frontend:80"
+    FRONTEND_HOST_URL: "http://localhost:80"
     FRONTEND_HOST_NAME: "localhost"
     CODE_SERV_URL: "http://frontend:80"
     LANDSCAPE_URL: "http://span-service:8080"
