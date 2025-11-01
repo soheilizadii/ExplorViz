@@ -74,18 +74,15 @@ frontend:
   port: 80
   replicaCount: 1
   env:
-    FRONTEND_HOST_URL: "http://localhost:80"
+    FRONTEND_HOST_URL: "http://localhost:8080"
     FRONTEND_HOST_NAME: "localhost"
-    CODE_SERV_URL: "http://frontend:80"
+    CODE_SERV_URL: "http://frontend:8080"
     LANDSCAPE_URL: "http://span-service:8080"
     TRACE_URL: "http://span-service:8080"
     TIMESTAMPS_URL: "http://span-service:8080"
     USER_URL: "http://user-service:8080"
     COLLABORATION_URL: "http://collaboration-service:4444"
-    VSCODE_SERV_URL: "http://frontend:80"
-    AUTH0_LOGO_URL: "http://frontend:80/images/explorviz-logo.png"
-    AUTH0_CALLBACK_URL: "http://frontend:80/callback"
-    AUTH0_LOGOUT_URL: "http://frontend:80/"
+    VSCODE_SERV_URL: "http://frontend:8080"
     NO_AUTH_USER_NICKNAME: "user-1"
 
 # ---------- Kafka  Service ----------
