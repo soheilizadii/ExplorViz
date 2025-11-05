@@ -29,9 +29,10 @@ service:
 
 # ---------- Span Service ----------
 span:
-  port: 8080
+  port: 8082
   replicaCount: 1   
   env:
+    QUARKUS_HTTP_PORT: "8082"  
     QUARKUS_CASSANDRA_CONTACT_POINTS: "cassandra.default.svc.cluster.local:9042"
     QUARKUS_CASSANDRA_AUTH_USERNAME: "cassandra"
     QUARKUS_CASSANDRA_AUTH_PASSWORD: "cassandra"
@@ -44,9 +45,10 @@ span:
 
 # ---------- User Service ----------
 user:
-  port: 8080
+  port: 8082
   replicaCount: 1 
   env:
+    QUARKUS_HTTP_PORT: "8082"  
     QUARKUS_OIDC_ENABLED: "false"
     INIT_TOKEN_ENABLED: "true"
     INIT_TOKEN_VALUE: "mytokenvalue"
@@ -74,15 +76,15 @@ frontend:
   port: 80
   replicaCount: 1
   env:
-    FRONTEND_HOST_URL: "http://localhost:8080"
+    FRONTEND_HOST_URL: "http://localhost:8082"
     FRONTEND_HOST_NAME: "localhost"
-    CODE_SERV_URL: "http://frontend:8080"
-    LANDSCAPE_URL: "http://span-service:8080"
-    TRACE_URL: "http://span-service:8080"
-    TIMESTAMPS_URL: "http://span-service:8080"
-    USER_URL: "http://user-service:8080"
+    CODE_SERV_URL: "http://frontend:8082"
+    LANDSCAPE_URL: "http://span-service:8082"
+    TRACE_URL: "http://span-service:8082"
+    TIMESTAMPS_URL: "http://span-service:8082"
+    USER_URL: "http://user-service:8082"
     COLLABORATION_URL: "http://collaboration-service:4444"
-    VSCODE_SERV_URL: "http://frontend:8080"
+    VSCODE_SERV_URL: "http://frontend:8082"
     NO_AUTH_USER_NICKNAME: "user-1"
 
 # ---------- Kafka  Service ----------
