@@ -18,6 +18,19 @@ spec:
         run: teastore-auth
     spec:
       terminationGracePeriodSeconds: 0
+      initContainers:
+        - name: wait-for-teastore-persistence
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              echo "🕓 Waiting for teastore-persistence:8080..."
+              until nc -z teastore-persistence 8080; do
+                echo "teastore-persistence not ready yet... sleeping 5s"
+                sleep 5
+              done
+              echo "✅ teastore-persistence is ready!"
       containers:
         - name: teastore-auth
           image: "{{ .Values.image.auth }}:{{ .Values.image.tag }}"

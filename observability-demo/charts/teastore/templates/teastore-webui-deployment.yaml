@@ -18,6 +18,18 @@ spec:
         run: teastore-webui
     spec:
       terminationGracePeriodSeconds: 0
+      initContainers:
+        - name: wait-for-teastore-image
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z teastore-image 8080; do
+                echo "🕓 teastore-image not ready yet... sleeping 5s"
+                sleep 5
+              done
+              echo "✅ teastore-image is ready!"
       containers:
         - name: teastore-webui
           image: "{{ .Values.image.webui }}:{{ .Values.image.tag }}"
